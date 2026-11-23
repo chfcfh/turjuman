@@ -47,6 +47,13 @@ public static class Program
             }
             // Güncelleme denetimi ana pencereden yürür; önceki açılış pencereye ulaşmadıysa arayüzden önce burada denenir.
             if (args is not ["--render-screens", _] and not ["--olc-bosta", _, _]) RescueUpdate.BeforeLaunch();
+            // Faz3a fork: one copy at a time. A second start (double-click, Faz3a's button pressed twice) brings the open
+            // window to the front instead of running two copies with two subtitle bars over the same game.
+            if (args is not ["--render-screens", _] and not ["--olc-bosta", _, _] && !SingleInstance.Claim())
+            {
+                SingleInstance.ShowExisting();
+                return 0;
+            }
             return RunApp();
         }
         catch (Exception error)
