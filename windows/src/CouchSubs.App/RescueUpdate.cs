@@ -16,7 +16,8 @@ namespace CouchSubs.App;
 /// </summary>
 internal static class RescueUpdate
 {
-    const string Repository = "https://github.com/yorulmazsinan/couchsubs";
+    // Faz3a fork: the fork's own releases, never upstream CouchSubs'.
+    const string Repository = CouchSubs.Core.Fork.Repository;
     static readonly TimeSpan Limit = TimeSpan.FromSeconds(45);
 
     static string MarkerPath => Path.Combine(Path.GetDirectoryName(StartupGuard.LogPath)!, "acilis-suruyor");

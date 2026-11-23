@@ -97,6 +97,19 @@
                                 </c:Unit>
                             </c:SpacedStack>
                         </c:Card>
+                        <!-- Faz3a fork: updates (automatic, plus a "check now" button). -->
+                        <c:Card x:Name="UpdatesCard" Title="{t:T 'Updates'}">
+                            <c:SpacedStack>
+                                <TextBlock x:Name="UpdateVersionText" Style="{StaticResource HintText}" />
+                                <TextBlock Style="{StaticResource HintText}" TextWrapping="Wrap"
+                                           Text="{t:T 'New versions download by themselves and install when you close the app.'}" />
+                                <WrapPanel>
+                                    <Button x:Name="CheckUpdatesButton" Content="{t:T 'Check for updates now'}" Click="OnCheckUpdates" Margin="{t:Sp '0,0,xs,xs'}" />
+                                    <Button x:Name="UpdateNowButton" Style="{StaticResource PrimaryButton}" Click="OnUpdateNow" Visibility="Collapsed" Margin="{t:Sp '0,0,0,xs'}" />
+                                </WrapPanel>
+                                <TextBlock x:Name="UpdateCheckResult" Style="{StaticResource HintText}" TextWrapping="Wrap" Visibility="Collapsed" />
+                            </c:SpacedStack>
+                        </c:Card>
                     </c:SpacedStack>
                     <!-- Altyazı görünümü özeti -->
                     <c:Card Grid.Column="2" Title="{t:T 'Subtitle appearance'}" VerticalAlignment="Top">

@@ -26,10 +26,16 @@ public static class Fork
     public const string DataFolder = "Faz3aSubs";
 
     /// <summary>
-    /// The upstream app updates itself from the CouchSubs GitHub releases. This fork has no release channel of its own
-    /// yet, so self-update stays off; turning it on requires pointing the updaters at the fork's own releases first.
+    /// The fork's public repository: its source code (AGPL-3.0) and its releases, which the app updates itself from
+    /// (Velopack, GitHub releases). Created by the owner on 2026-11-23.
     /// </summary>
-    public const bool UpdatesEnabled = false;
+    public const string Repository = "https://github.com/chfcfh/turjuman";
+
+    /// <summary>GitHub API path of <see cref="Repository"/> ("chfcfh/turjuman").</summary>
+    public const string RepositoryPath = "chfcfh/turjuman";
+
+    /// <summary>Self-update from <see cref="Repository"/>'s releases (never from the upstream CouchSubs releases).</summary>
+    public const bool UpdatesEnabled = true;
 
     /// <summary>Target language of every translation in this fork.</summary>
     public const string TargetLanguage = "ar";

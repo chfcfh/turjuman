@@ -3,6 +3,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using CouchSubs.Core;
 using HtmlAgilityPack;
 
 namespace CouchSubs.Shell;
@@ -32,8 +33,8 @@ public sealed class GitHubReleaseNotes(HttpClient http)
         if (offeredVersion.Length == 0 || !offeredVersion.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '+')) return [];
         var tag = "v" + offeredVersion;
         using var message = new HttpRequestMessage(HttpMethod.Get,
-            "https://api.github.com/repos/yorulmazsinan/couchsubs/releases/tags/" + Uri.EscapeDataString(tag));
-        message.Headers.UserAgent.ParseAdd("CouchSubs");
+            $"https://api.github.com/repos/{Fork.RepositoryPath}/releases/tags/" + Uri.EscapeDataString(tag));
+        message.Headers.UserAgent.ParseAdd(Fork.LatinName);
         message.Headers.Accept.ParseAdd("application/vnd.github.full+json");
         try
         {

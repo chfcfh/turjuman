@@ -1,3 +1,22 @@
+# ترجمان (Turjuman)
+
+**ترجمان** يترجم ترجمة الألعاب الإنجليزية اللي على الشاشة إلى العربي، ويعرضها في شريط فوق اللعبة على الكمبيوتر.
+يقرأ منطقة الترجمة بس، ويثبّت السطر قبل لا يعرضه، ويترجم بدون إنترنت (نموذج opus-mt إنجليزي→عربي) أو بمفتاحك الخاص
+في DeepSeek أو Gemini أو OpenAI أو Claude أو DeepL.
+
+- التنزيل: [آخر نسخة](https://github.com/chfcfh/turjuman/releases/latest) — فك الضغط وشغّل البرنامج؛ يحدّث نفسه تلقائيًا.
+- ما ينرسل أي سطر لأي سيرفر، إلا لخدمة الترجمة اللي تختارها بمفتاحك.
+- برنامج ويندوز 10/11 (64 بت). الكود في مجلد `windows/`.
+
+**Turjuman** translates English game subtitles on the PC screen into Arabic and shows them in a bar over the game.
+It is a **modified version of [CouchSubs](https://github.com/yorulmazsinan/couchsubs)** by Sinan Yorulmaz, licensed
+under the GNU AGPL-3.0; the changes are listed in [FORK-NOTICE.md](FORK-NOTICE.md). The offline English→Arabic model is
+[opus-mt-tc-big-en-ar](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-ar) by Helsinki-NLP (CC BY 4.0).
+
+The original CouchSubs README follows.
+
+---
+
 <p align="center"><img src="design/logo-1024.png" width="120" alt="CouchSubs"></p>
 
 # CouchSubs

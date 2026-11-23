@@ -4472,6 +4472,12 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
     /// <summary>Kurulum dosyasıyla kurulduysa tek tıkla güncellenir; değilse sürüm sayfası açılır.</summary>
     public bool CanUpdateItself => services.Updater?.CanUpdateItself == true;
 
+    /// <summary>Faz3a fork: the last update check could not reach the releases (no internet, GitHub down).</summary>
+    public bool UpdateCheckFailed { get; private set; }
+
+    /// <summary>Faz3a fork: whether this build can look for updates at all.</summary>
+    public bool UpdatesAvailable => services.Updater is not null;
+
     public Task<IReadOnlyList<ReleaseNoteRun>> LoadUpdateNotesAsync(string version) =>
         UpdateVersion == version && services.Updater is { } updater ? updater.ReleaseNotesAsync(version)
             : Task.FromResult<IReadOnlyList<ReleaseNoteRun>>([]);
@@ -4509,8 +4515,13 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
                               $"uygulama hâlâ {updater.Attempts!.CurrentVersion}. Velopack günlüğü: {updater.UpdateLogPath ?? "bilinmiyor"}");
         }
         string? version = null;
+        UpdateCheckFailed = false;
         try { version = await updater.CheckAsync(); }
-        catch (Exception error) when (error is HttpRequestException or TaskCanceledException or IOException or InvalidOperationException) { }
+        catch (Exception error) when (error is HttpRequestException or TaskCanceledException or IOException or InvalidOperationException)
+        {
+            // Faz3a fork: the "Check now" button says so instead of "you're up to date".
+            UpdateCheckFailed = true;
+        }
         // Ağ yoksa da uygulanamayan güncelleme söylenir.
         UpdateVersion = version ?? failed?.TargetVersion;
     }

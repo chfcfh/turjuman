@@ -72,7 +72,15 @@ public partial class MainView : UserControl
         Preview.SetRegion(controller.Settings.Region);
         Preview.SetLine(controller.IsRunning ? controller.LastTranslation : null);
         _ = controller.CheckForUpdateAsync();
+        // Faz3a fork: while the app stays open (a long game session), it looks for a new version again every 6 hours.
+        updateTimer.Tick -= OnUpdateTimer;
+        updateTimer.Tick += OnUpdateTimer;
+        updateTimer.Start();
     }
+
+    private readonly System.Windows.Threading.DispatcherTimer updateTimer = new() { Interval = TimeSpan.FromHours(6) };
+
+    private void OnUpdateTimer(object? sender, EventArgs e) => _ = controller.CheckForUpdateAsync();
 
     private void OnChanged(object? sender, PropertyChangedEventArgs e)
     {

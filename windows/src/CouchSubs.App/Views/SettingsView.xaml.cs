@@ -156,7 +156,38 @@ public partial class SettingsView : UserControl
         NavHost.SizeChanged += (_, _) => MoveSelection(false);
         Unloaded += (_, _) => StopRecording();
         HideForkParts();
+        ShowUpdates(checkedNow: false);
         loading = false;
+    }
+
+    /// <summary>Faz3a fork: "Check for updates now" in Settings › Basics.</summary>
+    private async void OnCheckUpdates(object sender, RoutedEventArgs e)
+    {
+        CheckUpdatesButton.IsEnabled = false;
+        UpdateCheckResult.Text = Localizer.Current["Checking…"];
+        UpdateCheckResult.Visibility = Visibility.Visible;
+        try { await controller.CheckForUpdateAsync(); }
+        finally { CheckUpdatesButton.IsEnabled = true; }
+        ShowUpdates(checkedNow: true);
+    }
+
+    private async void OnUpdateNow(object sender, RoutedEventArgs e) => await controller.InstallUpdateAsync();
+
+    private void ShowUpdates(bool checkedNow)
+    {
+        var text = Localizer.Current;
+        UpdatesCard.Visibility = controller.UpdatesAvailable ? Visibility.Visible : Visibility.Collapsed;
+        UpdateVersionText.Text = text.Format("Installed version: %@", AppVersion.Current(typeof(SettingsView).Assembly));
+        UpdateNowButton.Content = controller.UpdateButtonText;
+        UpdateNowButton.Visibility = controller.UpdateVersion is null ? Visibility.Collapsed : Visibility.Visible;
+        if (!checkedNow) return;
+        UpdateCheckResult.Text = controller.UpdateCheckFailed && controller.UpdateVersion is null
+            ? text["Couldn't check for updates. Check your internet connection."]
+            : controller.UpdateVersion is { } version
+                ? controller.CanUpdateItself
+                    ? text.Format("A new version is ready: %@. It installs by itself when you close the app, or press Update now.", version)
+                    : text.Format("A new version is out: %@. Download it from the program's page.", version)
+                : text["You have the latest version."];
     }
 
     /// <summary>

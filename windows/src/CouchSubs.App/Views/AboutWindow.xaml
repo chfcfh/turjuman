@@ -31,7 +31,9 @@
                        Style="{StaticResource HintText}" TextAlignment="Center" Margin="{t:Sp '0,xs,0,0'}" />
             <TextBlock Text="{t:T 'Remote Play connection by chiaki-ng (AGPL-3.0). Thanks to its developers.'}" Style="{StaticResource CaptionText}" TextAlignment="Center" Margin="{t:Sp '0,s,0,0'}" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="{t:Sp '0,m,0,0'}">
-                <Button Content="CouchSubs" Style="{StaticResource SmallSecondaryButton}" Height="40" Tag="https://github.com/yorulmazsinan/couchsubs" Click="OnLink" />
+                <!-- AGPL-3.0: where this modified version's complete source code is. -->
+                <Button Content="{t:T 'Source code'}" Style="{StaticResource SmallSecondaryButton}" Height="40" Tag="https://github.com/chfcfh/turjuman" Click="OnLink" />
+                <Button Content="CouchSubs" Style="{StaticResource SmallSecondaryButton}" Height="40" Margin="{t:Sp 'xs,0,0,0'}" Tag="https://github.com/yorulmazsinan/couchsubs" Click="OnLink" />
                 <Button Content="OPUS-MT" Style="{StaticResource SmallSecondaryButton}" Height="40" Margin="{t:Sp 'xs,0,0,0'}" Tag="https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-ar" Click="OnLink" />
                 <Button Content="chiaki-ng" Style="{StaticResource SmallSecondaryButton}" Height="40" Margin="{t:Sp 'xs,0,0,0'}" Tag="https://github.com/chiaki-ng/chiaki-ng" Click="OnLink" />
             </StackPanel>
