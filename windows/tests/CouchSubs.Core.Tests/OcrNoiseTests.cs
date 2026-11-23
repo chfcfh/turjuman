@@ -14,6 +14,18 @@ public class OcrNoiseTests
     [InlineData("He left 3e, at dawn.", "He left, at dawn.")]
     public void GarbledWordsAreRemoved(string line, string expected) => Assert.Equal(expected, OcrNoise.Clean(line));
 
+    /// Faz3a fork: a continue arrow after the subtitle was read as one more character (Discord stream test).
+    [Theory]
+    [InlineData("worrying about whether I am angry or not? B", "worrying about whether I am angry or not?")]
+    [InlineData("worrying about whether I am angry or not? 9", "worrying about whether I am angry or not?")]
+    [InlineData("We should go now. g", "We should go now.")]
+    [InlineData("\"If it helps me get better.\" 9", "\"If it helps me get better.\"")]
+    [InlineData("Who did this? I", "Who did this? I")]
+    [InlineData("You get a grade of A", "You get a grade of A")]
+    [InlineData("Go with plan B", "Go with plan B")]
+    public void StrayCharacterAfterTheLastSentenceIsDropped(string line, string expected) =>
+        Assert.Equal(expected, OcrNoise.Clean(line));
+
     [Theory]
     [InlineData("Turn on the PS5 now.")]
     [InlineData("Hold R2-D2 still.")]

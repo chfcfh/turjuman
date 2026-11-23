@@ -65,6 +65,13 @@ public static partial class OcrNoise
         // Altyazının yanındaki göstergenin sayısı satırın başına yapışıyor ("9? We'll lose", "100. Mac and John").
         // Mesafe işareti de öyle ("23m CESARE: Here!"). Tek başına sayı ve ardından büyük harfle başlayan cümle: sayı atılır.
         if (kept.Count >= 3 && LeadingNumber().IsMatch(kept[0]) && char.IsUpper(kept[1][0])) kept.RemoveAt(0);
+        // Faz3a fork: a "continue" arrow or button drawn after the subtitle is read as one stray character after the
+        // last sentence ("angry or not? B", "… not? 9"; seen on a Discord stream). A lone letter or digit after
+        // . ? ! or … ends no English sentence (except "I" and "A", which are kept).
+        if (kept.Count >= 3 && kept[^1].Length == 1 && char.IsLetterOrDigit(kept[^1][0]) && kept[^1] is not ("I" or "A" or "a")
+            && string.Join(' ', kept.Take(kept.Count - 1)).TrimEnd(' ', '"', '”', '’', '\'') is { Length: > 0 } before
+            && ".?!…".Contains(before[^1]))
+            kept.RemoveAt(kept.Count - 1);
         return string.Join(' ', kept);
     }
 
