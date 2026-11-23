@@ -57,7 +57,7 @@ public static partial class OcrNoise
                 continue;
             }
             if (CleanCore(core) is { } fixedCore)
-                kept.Add(lead + fixedCore + trail);
+                kept.Add(lead + (KnownWord is { } known ? Unglue(fixedCore, known) : fixedCore) + trail);
             else if (trail.Length > 0 && kept.Count > 0)
                 // Atılan çöpün ardındaki noktalama cümleye aittir ("ou$3e," → virgül kalır).
                 kept[^1] += trail;
@@ -77,6 +77,57 @@ public static partial class OcrNoise
 
     [GeneratedRegex(@"^\d+(?:m|km|ft|yd)?[.?!:;]?$")]
     private static partial Regex LeadingNumber();
+
+    /// <summary>
+    /// Faz3a fork: the English dictionary (Windows spell checker), set by the app when it is available; null leaves
+    /// glued words as they are. Used by <see cref="Unglue"/>.
+    /// </summary>
+    public static Func<string, bool>? KnownWord { get; set; }
+
+    /// <summary>Short words a capitalised glued word may start with ("Ifwe're" → "If we're"); other capitalised
+    /// tokens are left alone because they are usually names ("Yanagihara", "Setsuna").</summary>
+    private static readonly HashSet<string> SentenceStarts = new(StringComparer.Ordinal)
+    {
+        "I", "A", "If", "In", "It", "Is", "Its", "It's", "I'm", "I'll", "I've", "I'd", "We", "We're", "You", "You're", "He",
+        "She", "They", "The", "This", "That", "And", "But", "So", "Do", "Don't", "Go", "No", "Not", "What", "When", "Where",
+        "Why", "How", "Who", "Let's", "Get", "Got", "Come", "Look", "Oh", "Okay", "Yes", "Yeah", "Well", "Just", "All",
+        "Are", "Can", "Did", "Have", "Was", "Will", "My", "Your", "Our", "To", "For", "On", "At", "Of", "Or", "As",
+    };
+
+    /// <summary>
+    /// Faz3a fork: advanced recognition (PP-OCR) sometimes drops the space between two words ("bunchof", "trydoing",
+    /// "you'redone", "Ifwe're allon"; seen on a Discord stream), and the offline model then mistranslates the line. A
+    /// token that is not a dictionary word but splits into two dictionary words is split; a real word never is. Each half
+    /// may be split once more ("Ifwe'reallon"). Single letters are only "a" and "I".
+    /// </summary>
+    internal static string Unglue(string word, Func<string, bool> known, int depth = 0)
+    {
+        if (word.Length < 4 || depth > 1 || !word.All(c => char.IsLetter(c) || c is '\'' or '’')) return word;
+        if (known(word) || known(word.ToLowerInvariant())) return word;
+        var capitalised = char.IsUpper(word[0]);
+        if (capitalised && word.Length > 1 && word.Skip(1).All(char.IsUpper)) return word; // SHOUTING or an acronym
+        bool Known(string part) =>
+            part.Length == 1 ? part is "a" or "I" or "A" : part.Length >= 2 && (known(part) || known(part.ToLowerInvariant()));
+        string? best = null;
+        var bestScore = -1;
+        for (var cut = 1; cut < word.Length; cut++)
+        {
+            var (left, right) = (word[..cut], word[cut..]);
+            if (right[0] is '\'' or '’' || left[^1] is '\'' or '’') continue;
+            if (capitalised && depth == 0 && !SentenceStarts.Contains(left)) continue;
+            if (!Known(left)) continue;
+            var rest = Known(right) ? right : Unglue(right, known, depth + 1);
+            if (rest == right && !Known(right)) continue;
+            // Prefer the most even cut: "allon" → "all on", not "a llon"; the longest-word split reads most naturally.
+            var score = Math.Min(left.Length, rest.Split(' ')[0].Length);
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = left + " " + rest;
+            }
+        }
+        return best ?? word;
+    }
 
     /// <summary>
     /// Bir okumanın ne kadar sözcük gibi göründüğü: düzgün sözcüklerin harfleri artı, çöp ve karışık büyük-küçük

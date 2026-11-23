@@ -14,6 +14,29 @@ public class OcrNoiseTests
     [InlineData("He left 3e, at dawn.", "He left, at dawn.")]
     public void GarbledWordsAreRemoved(string line, string expected) => Assert.Equal(expected, OcrNoise.Clean(line));
 
+    /// Faz3a fork: advanced recognition dropped spaces on a Discord stream; glued words are split with the dictionary.
+    private static readonly HashSet<string> Dictionary = new(StringComparer.Ordinal)
+    {
+        "a", "bunch", "of", "try", "doing", "you're", "done", "if", "we're", "all", "on", "stage", "together", "i", "know",
+        "the", "rapist", "therapist", "into", "in", "to", "costumes", "shop", "shops", "and", "go", "on",
+    };
+
+    [Theory]
+    [InlineData("bunchof", "bunch of")]
+    [InlineData("trydoing", "try doing")]
+    [InlineData("you'redone", "you're done")]
+    [InlineData("Ifwe're", "If we're")]
+    [InlineData("allon", "all on")]
+    [InlineData("Iknow", "I know")]
+    [InlineData("therapist", "therapist")]           // a real word is never split
+    [InlineData("into", "into")]
+    [InlineData("Yanagihara", "Yanagihara")]         // capitalised: a name unless it starts with a short common word
+    [InlineData("Setsuna", "Setsuna")]
+    [InlineData("STOW", "STOW")]                     // shouting / acronym
+    [InlineData("Heeeey", "Heeeey")]
+    public void GluedWordsAreSplit(string word, string expected) =>
+        Assert.Equal(expected, OcrNoise.Unglue(word, w => Dictionary.Contains(w)));
+
     /// Faz3a fork: a continue arrow after the subtitle was read as one more character (Discord stream test).
     [Theory]
     [InlineData("worrying about whether I am angry or not? B", "worrying about whether I am angry or not?")]

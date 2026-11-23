@@ -96,6 +96,11 @@ public static partial class WindowsSpellCheck
     private static IEnumerable<string> Words(string text) =>
         WordPattern().Matches(text).Select(match => match.Value.Trim('\'', '’'));
 
+    /// <summary>
+    /// Faz3a fork: strict dictionary check for splitting glued words ("bunchof" → "bunch of"): no exemption for names.
+    /// </summary>
+    public static bool IsKnownWord(string word) => word.Length > 0 && IsDictionaryWord(word);
+
     /// <summary>Özel ad ayrıcalığı olmadan: sözlükte (ya da sokak ağzı listesinde) var mı.</summary>
     private static bool IsDictionaryWord(string word)
     {

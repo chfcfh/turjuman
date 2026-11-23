@@ -461,6 +461,8 @@ public sealed class LiveServices : IAppServices
         SubtitlePipeline.ExtraReadingScore = dictionary ? WindowsSpellCheck.Score : null;
         SubtitlePipeline.DefaultHoldWithoutPacks = dictionary;
         WindowsOcrReader.DictionaryScore = dictionary ? WindowsSpellCheck.Score : null;
+        // Faz3a fork: glued words from the reader ("bunchof") are split with the same English dictionary.
+        OcrNoise.KnownWord = dictionary ? WindowsSpellCheck.IsKnownWord : null;
         return reader;
     }
     public ITextReader? MakeReader(string language, OcrEngine engine)
