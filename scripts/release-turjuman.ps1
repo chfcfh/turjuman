@@ -1,4 +1,4 @@
-# Faz3a fork: publish a new version of ترجمان (Turjuman) to GitHub releases, which installed copies update from.
+﻿# Faz3a fork: publish a new version of ترجمان (Turjuman) to GitHub releases, which installed copies update from.
 # Usage (from the repository root):  .\scripts\release-turjuman.ps1 -Version 1.0.2 -Notes "ما الجديد"
 # Needs: the x64 .NET 10 SDK, vpk 1.2.161 (dotnet tool), gh signed in to the account that owns Fork.Repository,
 # and windows\Directory.Build.local.props with ArabicModelDir (the offline model is copied into the package).
