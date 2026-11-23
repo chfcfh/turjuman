@@ -86,6 +86,8 @@ public partial class SubtitleOutputCard : UserControl
         SecondScreenEntry.Visibility = Detailed ? Visibility.Collapsed : Visibility.Visible;
         ClickThrough.IsChecked = settings.OverlayClickThrough;
         OverText.IsChecked = settings.TranslationOverText;
+        LiveScreen.IsChecked = settings.LiveScreenText;
+        LiveScreen.IsEnabled = settings.TranslationOverText;
         ClickThroughHint.Visibility = Detailed || settings.OverlayClickThrough ? Visibility.Visible : Visibility.Collapsed;
         ClickThroughHint.Text = HotkeyText.Sentence(settings, HotkeyAction.ClickThrough,
             "When on, clicks go through to the window below. Press %@ to turn it off.");
@@ -110,6 +112,13 @@ public partial class SubtitleOutputCard : UserControl
     {
         if (loading || controller is null) return;
         controller.Settings = controller.Settings with { TranslationOverText = OverText.IsChecked == true };
+    }
+
+    /// <summary>Faz3a fork: all the text on the screen translated live over its own text (LiveScreen), or only the subtitle and areas.</summary>
+    private void OnLiveScreen(object sender, RoutedEventArgs e)
+    {
+        if (loading || controller is null) return;
+        controller.Settings = controller.Settings with { LiveScreenText = LiveScreen.IsChecked == true };
     }
 
     private void OnAdjust(object sender, RoutedEventArgs e)

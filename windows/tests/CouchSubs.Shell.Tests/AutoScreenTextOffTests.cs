@@ -48,7 +48,7 @@ public class AutoScreenTextOffTests
         var store = new MemorySettings();
         var start = new UserSettings
         {
-            FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer,
+            FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer, LiveScreenText = false,
             AutoScreenText = false, AutoScreenTextReset = true,
         }.WithAreaPreset(AreaPreset.Bottom);
         store.Save(start);
@@ -84,7 +84,7 @@ public class AutoScreenTextOffTests
         var store = new MemorySettings();
         store.Save(new UserSettings
         {
-            FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer,
+            FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer, LiveScreenText = false,
             AutoScreenText = true, AutoScreenTextReset = true,
         });
         using var controller = AppControllerTests.Make(services, settings: store);

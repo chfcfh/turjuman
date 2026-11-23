@@ -33,7 +33,7 @@ public class ScreenTextReadingTests
     {
         var services = new FakeServices { ReaderLines = Reading.FromText("Follow Paulie to the car.") };
         var settings = new MemorySettings();
-        settings.Save(new UserSettings { FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer, AutoScreenText = enabled, AutoScreenTextReset = true,
+        settings.Save(new UserSettings { FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer, LiveScreenText = false, AutoScreenText = enabled, AutoScreenTextReset = true,
                                         ScreenTextMission = mission });
         using var controller = AppControllerTests.Make(services, settings: settings);
         // Sahte okuyucu altyazıya ve alana aynı yazıyı verir; altyazı yinelemesi engeli burada sınanmıyor.
@@ -62,7 +62,7 @@ public class ScreenTextReadingTests
     {
         var services = new FakeServices { ReaderLines = Reading.FromText("Follow Paulie to the car.") };
         var settings = new MemorySettings();
-        settings.Save(new UserSettings { FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer, AutoScreenText = true, AutoScreenTextReset = true });
+        settings.Save(new UserSettings { FrameSource = FrameSource.RemotePlayWindow, Output = SubtitleOutput.Computer, LiveScreenText = false, AutoScreenText = true, AutoScreenTextReset = true });
         using var controller = AppControllerTests.Make(services, settings: settings);
         var events = new ConcurrentQueue<SubtitleEvent>();
         controller.StreamEvent += events.Enqueue;

@@ -537,6 +537,8 @@
  "Translation model: OPUS-MT, University of Helsinki (CC BY 4.0).": "نموذج الترجمة: OPUS-MT من جامعة هلسنكي (ترخيص CC BY 4.0).",
  "Translation model: opus-mt-tc-big-en-ar by Helsinki-NLP / OPUS-MT, University of Helsinki (CC BY 4.0), converted to ONNX by Faz3a.": "نموذج الترجمة: opus-mt-tc-big-en-ar من Helsinki-NLP / OPUS-MT، جامعة هلسنكي (ترخيص CC BY 4.0)، حوّلته فزعة لصيغة ONNX.",
  "Translation over the original text": "الترجمة فوق النص الأصلي",
+ "Translate all text on the screen": "ترجمة كل نصوص الشاشة",
+ "Menus, messages, notices and any other text on the screen are translated too, each over its own text. Off: only the subtitle and the areas you chose.": "القوائم والرسائل والتنبيهات وأي نص ثاني على الشاشة ينترجم بعد، وكل ترجمة فوق نصها. إذا قفلتها ينترجم الحوار والمناطق اللي حددتها بس.",
  "Translation, Sound": "الترجمة، الصوت",
  "Try again": "حاول مرة ثانية",
  "Try demo mode (no game needed)": "جرّب وضع التجربة (بدون لعبة)",

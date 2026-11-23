@@ -527,6 +527,21 @@ public sealed class SubtitleServer(int port = 8787, TimeSpan? pingInterval = nul
     }
 
     /// <summary>
+    /// Faz3a fork: the live whole-screen translations (<see cref="LiveScreenBoard"/>), sent as one automatic area. Only a
+    /// single box bigger than <see cref="MaxBoxArea"/> is dropped; a busy menu can cover much of the screen in many small
+    /// boxes, and the total-area rule of <see cref="Guard"/> would have removed all of them at once.
+    /// </summary>
+    public void SendLiveScreen(IReadOnlyList<ScreenTranslation.Item> items)
+    {
+        var kept = items.Where(item => Area(item.Box) <= MaxBoxArea).ToList();
+        var text = string.Join('\n', kept.Where(item => !ScreenPhoneCard.IsBackdrop(item)).Select(item => item.Translation));
+        IReadOnlyList<ScreenTranslation.Item>? blocks = kept.Count > 0 && text.Length > 0 ? kept : null;
+        if (blocks is null) text = "";
+        Broadcast(Frame("region", RegionData(LiveScreenBoard.Id, text, null, null, null, blocks)), subtitle: true);
+        EventSent?.Invoke(new SubtitleEvent(SubtitleEventKind.Region, text, Id: LiveScreenBoard.Id, Blocks: blocks));
+    }
+
+    /// <summary>
     /// Ekranın bu oranından büyük çeviri kutusu gönderilmez. TV ve OBS kutuyu opak zeminle çizer; yanlış bir algılamanın
     /// (oyun telefonu, otomatik ekran yazısı) ekranın büyük kısmını kaplayan kutusu oyun görüntüsünü kapatıyordu
     /// (LG'de "siyah ekran, ses var").

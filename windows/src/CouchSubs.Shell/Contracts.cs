@@ -451,6 +451,18 @@ public sealed record UserSettings
     /// Off: everything in the subtitle bar as upstream.
     /// </summary>
     public bool TranslationOverText { get; init; } = true;
+    /// <summary>
+    /// Faz3a fork: while translations are drawn over the original text, all the text on the screen is translated live, each
+    /// block over its own text (LiveScreen), instead of only the subtitle and a few kinds of on-screen text.
+    /// </summary>
+    public bool LiveScreenText { get; init; } = true;
+    /// <summary>
+    /// Faz3a fork: the whole screen is translated live (<see cref="LiveScreenText"/> with the layer on the PC). Only while a
+    /// window is read (a game window, Remote Play): the layer lies over that window; there is nothing to draw on otherwise.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool TranslatesLiveScreen => TranslationOverText && LiveScreenText && Output.ShowsOnComputer()
+                                        && FrameSource is FrameSource.CaptureWindow or FrameSource.RemotePlayWindow;
     /// <summary>Bilgisayar ekranındaki altyazı penceresi tıklamaları alttaki pencereye (oyun, PS Remote Play) geçirir.</summary>
     public bool OverlayClickThrough { get; init; }
     /// <summary>Altyazı penceresinin son yeri; null ise ana ekranın altında ortada açılır.</summary>

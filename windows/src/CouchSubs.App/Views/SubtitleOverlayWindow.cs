@@ -289,24 +289,28 @@ public sealed partial class SubtitleOverlayWindow : Window
         {
             inPlace ??= new InPlaceTextWindow();
             var current = lines.LastOrDefault(l => l.Role == SubtitleStack.Role.Current && !l.Paragraphs);
+            CouchSubs.Core.TextBox? lineBox = null;
             if (current is not null && subtitleBox is { Box: { } where } known && known.Text == current.Text)
             {
                 var style = controller.Settings.Style;
                 inPlace.ShowLine(current.Text, where, style, words => SpeakerText.Fill(words, current.Text, current.Text,
                     controller.Settings.SpeakerColors, controller.SpeakerBook, nameOnly: style.NameOnly));
                 lines.Clear();
+                lineBox = where;
             }
             else inPlace.ShowLine(null, null, controller.Settings.Style);
             var placed = new List<ScreenTranslation.Item>();
+            var live = new List<ScreenTranslation.Item>();
             barRegions = [];
             foreach (var (id, region) in ScreenRegions.Visible(regions))
             {
-                if (region.Blocks is { Count: > 0 } blocks) placed.AddRange(blocks);
+                var into = id == LiveScreenBoard.Id ? live : placed;
+                if (region.Blocks is { Count: > 0 } blocks) into.AddRange(blocks);
                 else if (region.Box is { } at && region.Text.Length > 0)
-                    placed.Add(new ScreenTranslation.Item("", region.Text, at, Math.Clamp((at.Bottom - at.Top) / 3, 0.015, 0.035)));
+                    into.Add(new ScreenTranslation.Item("", region.Text, at, Math.Clamp((at.Bottom - at.Top) / 3, 0.015, 0.035)));
                 else barRegions[id] = region;
             }
-            inPlace.ShowItems(placed);
+            inPlace.ShowItems(OneEach(placed, live, lineBox));
         }
         else inPlace?.HideAll();
 
@@ -343,6 +347,18 @@ public sealed partial class SubtitleOverlayWindow : Window
             timer.Interval = TimeSpan.FromSeconds(Math.Max(0.01, next - now));
             timer.Start();
         }
+    }
+
+    /// <summary>
+    /// Faz3a fork: one translation per text on the layer. The user's own areas, the phone and "Translate the screen" win
+    /// over the live screen; among the rest a later box replaces an earlier one at the same place; nothing is drawn under
+    /// the subtitle line. A friend saw two translations stacked on one text (two readers had each translated it).
+    /// </summary>
+    internal static IReadOnlyList<ScreenTranslation.Item> OneEach(IReadOnlyList<ScreenTranslation.Item> placed,
+        IReadOnlyList<ScreenTranslation.Item> live, CouchSubs.Core.TextBox? line)
+    {
+        var all = ScreenTranslation.Layered([.. placed, .. ScreenTranslation.Uncovered(live, placed)]);
+        return line is { } at ? ScreenTranslation.Uncovered(all, [new ScreenTranslation.Item("", "", at, 0)]) : all;
     }
 
     /// <summary>TV'deki altyazı kutusunun aynısı: siyah yarı saydam zemin, beyaz ya da sarı yarı kalın yazı, üst satırlar soluk.</summary>

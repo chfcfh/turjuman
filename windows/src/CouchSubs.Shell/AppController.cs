@@ -3643,6 +3643,10 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
     private WatchedArea? missionArea;
     /// <summary>Altyazıdan ayrılan kenar bildirimlerinin ek alanları (bkz. <see cref="ScreenNotices"/>); yoksa boş.</summary>
     private IReadOnlyList<WatchedArea> noticeAreas = [];
+    /// <summary>Faz3a fork: live translation of the whole screen (<see cref="UserSettings.TranslatesLiveScreen"/>); null when off.</summary>
+    private LiveScreen? liveScreen;
+    /// <summary>The languages, text reader and translator the live screen was made with; another one is made when they change.</summary>
+    private string liveScreenKey = "";
 
     /// <summary>
     /// "Tam ekran" alanda ekranın kenarındaki bildirim kartı (sağ altta mesaj önizlemesi, solda kayan bildirim) altyazıya
@@ -3684,8 +3688,10 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
     {
         presetAreas = presetRunning ? settings.PresetAreas(gameSense.Current?.Name, phoneArea is not null) : [];
         // Oyun telefonu açıkken telefonun yazıları telefon okuyucusundadır; kenar bildirimi sayılmaz.
-        watchedAreas = [.. savedWatchedAreas, .. presetAreas, .. autoAreas,
-                        .. missionArea is null ? [] : new[] { missionArea }, .. phoneArea is null ? noticeAreas : [],
+        // Faz3a fork: the live screen reads all the text, so on-screen text, mission and notice areas would translate it twice.
+        var live = liveScreen is not null;
+        watchedAreas = [.. savedWatchedAreas, .. presetAreas, .. live ? [] : autoAreas,
+                        .. missionArea is null || live ? [] : new[] { missionArea }, .. phoneArea is null && !live ? noticeAreas : [],
                         .. phoneArea is null ? [] : new[] { phoneArea }];
     }
 
@@ -3710,7 +3716,8 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
             // Altyazı hattı telefonu yalnız GTA 6'da ve telefon ayarı açıkken arar: başka oyunda ya da karanlık sahnede
             // yanlış bulunan telefon alt şeritteki altyazıyı silmesin (Mac, iPhone, Android ile aynı).
             if (pipeline is { } current) current.FindsPhone = phoneTracker is not null;
-            if (running && settings.AutoScreenText && !settings.ExtraAreasPausedByFullScreen)
+            UpdateLiveScreen(running);
+            if (running && settings.AutoScreenText && !settings.ExtraAreasPausedByFullScreen && liveScreen is null)
                 screenText ??= new ScreenTextDetector();
             else
             {
@@ -3719,7 +3726,7 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
             }
             // Otomatik ekran yazısı kapandı (ya da çeviri durdu): görev satırının ayrı kutusu da kalkar; görev yine
             // altyazıya girmez ama altyazı alanı dışında hiçbir yazı çevrilmez.
-            if (!running || !settings.AutoScreenText) missionArea = null;
+            if (!running || !settings.AutoScreenText || liveScreen is not null) missionArea = null;
             if (!running) noticeAreas = [];
             savedWatchedAreas = running ? settings.WatchedAreas() : [];
             presetRunning = running;
@@ -3763,6 +3770,35 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>
+    /// regionGate altında. Faz3a fork: the live screen runs while translating with the layer over the original text on the
+    /// PC; it is made again when the languages, text reader or translator change.
+    /// </summary>
+    private void UpdateLiveScreen(bool running)
+    {
+        var key = string.Join('|', settings.SourceLanguage, settings.TargetLanguage, OnlineTranslationActive,
+                              settings.OnlineEngine, settings.DeepSeekModel, settings.GeminiModel, settings.OpenAiModel,
+                              settings.ClaudeModel, settings.LocalAiModel, settings.AiInstruction);
+        var wanted = running && settings.TranslatesLiveScreen && !demoMode;
+        if (liveScreen is not null && (!wanted || key != liveScreenKey))
+        {
+            liveScreen.Stop();
+            liveScreen = null;
+        }
+        if (!wanted || liveScreen is not null) return;
+        // Windows' own text reader, whatever is chosen for the subtitle: the advanced reader is one shared engine behind one
+        // lock, and reading the whole frame with it (about a second) held up every subtitle read (25 ms → 400 ms in a test).
+        // The one-language overload is used on purpose: the other one releases the advanced engine when given Windows.
+        if (services.MakeReader(settings.SourceLanguage) is not { } reader) return;
+        liveScreenKey = key;
+        liveScreen = new LiveScreen(reader, MakeTranslator(), server, () =>
+        {
+            var current = Volatile.Read(ref settings);
+            return (current.PhoneMessagesPanel, ScreenPhoneCard.TextScale(current.Style.FontSize));
+        });
+        SubtitleLog.Write("canlı ekran: ekranın bütün yazıları kendi yerinde çevriliyor");
+    }
+
     // regionGate altında. Kapanan telefonun geç tamamlanan isteği yeni bir telefona veya diğer alanlara yazamaz.
     private void ClosePhone()
     {
@@ -3786,6 +3822,13 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
             autoAreas = [];
             missionArea = null;
             noticeAreas = [];
+            // Faz3a fork: its translations go; when discarded it is made again by UpdateRegionWatcher.
+            if (discard)
+            {
+                liveScreen?.Stop();
+                liveScreen = null;
+            }
+            else liveScreen?.Clear();
             ComposeWatchedAreas();
             regionWatcher?.Reset();
             if (discard) regionWatcher = null;
@@ -3794,6 +3837,8 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
 
     private void OfferWatchedAreas(Frame frame, long arrived)
     {
+        // Faz3a fork: the live screen reads in the background, one read at a time; it never holds up this frame.
+        Volatile.Read(ref liveScreen)?.Offer(frame, arrived);
         if (Volatile.Read(ref regionWatcher) is null && Volatile.Read(ref phoneTracker) is null && Volatile.Read(ref screenText) is null) return;
         // Okuyucu ayarlar değişirken kuruluyorsa ana altyazı karesini bekletme.
         if (!Monitor.TryEnter(regionGate)) return;

@@ -19,6 +19,12 @@ program from Faz3a's own app.
 - **DeepSeek** added as a translation engine with the user's own key (`AiProvider.DeepSeek`, OpenAI-compatible
   `https://api.deepseek.com/chat/completions`, thinking mode off; models `deepseek-flash` and `deepseek-v4-pro`).
 - **Arabic interface** with right-to-left layout; Arabic subtitles are drawn right to left in the subtitle bar.
+- **Translations over the original text** (`InPlaceTextWindow.cs`, `CaptureTarget.cs`): on a click-through layer over
+  the window being read, the subtitle covers the game's subtitle and other translations sit on their own text.
+- **All text on the screen** (`LiveScreen.cs`, `LiveScreenBoard.cs`): while the layer is on, the whole frame is read
+  again and again with Windows' text reader and every text block gets one translation over it, kept until its text is
+  gone from several reads. The upstream on-screen text, mission and notice readers are off meanwhile, so no text is
+  translated twice.
 - **Removed / switched off:** game packs, the shared line pool (no subtitle line is ever uploaded), usage statistics,
   pack downloads, updates from the upstream CouchSubs releases, and the ad band / pop-up ads for the upstream
   publisher's other apps.
