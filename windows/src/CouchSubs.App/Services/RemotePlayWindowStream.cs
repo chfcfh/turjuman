@@ -158,9 +158,22 @@ public sealed class RemotePlayWindowStream : IStreamSession
         _ = Task.Run(async () =>
         {
             var noted = false;
+            var fallbackNoted = false;
             while (!token.IsCancellationRequested && IsCurrent(number))
             {
                 var window = FindGameWindow(processNames, selectedWindow?.Title);
+                // Faz3a fork: Discord (and some games) change their window title all the time: another channel, an
+                // unread count, the level name. When the exact title is gone, the biggest window of the same program is
+                // read instead. Not for OBS: there the title is what tells a projector from OBS's own main window.
+                if (window == IntPtr.Zero && selectedWindow is { } chosen && AllowsTitleChange(chosen.ProcessName))
+                {
+                    window = FindGameWindow(processNames);
+                    if (window != IntPtr.Zero && !fallbackNoted)
+                    {
+                        fallbackNoted = true;
+                        RemotePlayLog.Note($"Seçilen başlık yok ({chosen.Title}); aynı programın en büyük penceresi okunuyor: {WindowTitle(window)}");
+                    }
+                }
                 if (window != IntPtr.Zero)
                 {
                     try
@@ -230,6 +243,14 @@ public sealed class RemotePlayWindowStream : IStreamSession
                     : Localizer.Current["The Remote Play window comes through black: this app may block screen capture. Try chiaki-ng."]));
         else
             Report(SessionState.Streaming);
+    }
+
+    /// <summary>Faz3a fork: may another window title of the same program be read (everything except OBS).</summary>
+    internal static bool AllowsTitleChange(string processName)
+    {
+        var process = processName.Trim().ToLowerInvariant();
+        return !(process == "obs" || process.StartsWith("obs64") || process.StartsWith("obs32") || process.StartsWith("obs ")
+                 || process.Contains("obs studio") || process == "obs-studio");
     }
 
     /// <summary>Seçilen uygulamaların en büyük, görünür, simge durumunda olmayan üst düzey penceresi.</summary>
