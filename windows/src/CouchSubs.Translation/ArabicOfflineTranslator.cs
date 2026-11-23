@@ -14,7 +14,7 @@ namespace CouchSubs.Translation;
 public sealed class ArabicOfflineTranslator : ITextTranslator, IDisposable
 {
     /// <summary>Engine name in the persistent cache; changes whenever the model or the text steps change.</summary>
-    public const string EngineId = "opus-mt-tc-big-en-ar-onnx-int8-v1";
+    public const string EngineId = "opus-mt-tc-big-en-ar-onnx-int8-v2";
 
     private readonly Func<ISentenceEngine> engineFactory;
     private readonly TranslationCache cache;
@@ -93,7 +93,8 @@ public sealed class ArabicOfflineTranslator : ITextTranslator, IDisposable
             var current = engine ??= CreateEngine();
             var knownNames = names.Keys.ToHashSet(StringComparer.Ordinal);
             var input = GameEnglish.Plain(SubtitleSegmenter.NormalizeCase(sentence, knownNames));
-            var translation = await Task.Run(() => current.Translate(input, cancellationToken), cancellationToken).ConfigureAwait(false);
+            var translation = EndLike(sentence,
+                await Task.Run(() => current.Translate(input, cancellationToken), cancellationToken).ConfigureAwait(false));
             cache.Store(sentence, translation);
             return translation;
         }
@@ -101,6 +102,21 @@ public sealed class ArabicOfflineTranslator : ITextTranslator, IDisposable
         {
             gate.Release();
         }
+    }
+
+    /// <summary>
+    /// The model often drops the final full stop, so two translated sentences ran together ("أطفئ الأنوار شخص ما يراقب
+    /// المنزل."). When the English sentence ends with . ! or ? and the Arabic does not end with a mark, the matching one is
+    /// added (? becomes the Arabic ؟).
+    /// </summary>
+    internal static string EndLike(string source, string translation)
+    {
+        var english = source.TrimEnd().TrimEnd('"', '\'', '”', '’', ')');
+        var arabic = translation.TrimEnd();
+        if (english.Length == 0 || arabic.Length == 0) return translation;
+        var mark = english[^1] switch { '.' => ".", '!' => "!", '?' => "؟", _ => null };
+        if (mark is null || arabic[^1] is '.' or '!' or '?' or '؟' or '…' or ':' or '،' or '"' or '”') return translation;
+        return arabic + mark;
     }
 
     private ISentenceEngine CreateEngine()

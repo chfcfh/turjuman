@@ -71,6 +71,35 @@ public sealed class ArabicOfflineTranslatorTests(ITestOutputHelper output)
         Assert.Equal(2, engine.Calls);
     }
 
+    [Theory]
+    [InlineData("Turn off the lights.", "أطفئ الأنوار", "أطفئ الأنوار.")]
+    [InlineData("Where are you going?", "إلى أين أنت ذاهب", "إلى أين أنت ذاهب؟")]
+    [InlineData("Watch out!", "احترس!", "احترس!")]
+    [InlineData("Continue", "تابع", "تابع")]
+    [InlineData("Not again.", "ليس مجدداً", "ليس مجدداً.")]
+    public void MissingEndMarkIsAdded(string english, string arabic, string expected) =>
+        Assert.Equal(expected, ArabicOfflineTranslator.EndLike(english, arabic));
+
+    [Fact]
+    public void DeepSeekRequestUsesItsEndpointAndTurnsThinkingOff()
+    {
+        var model = AiProvider.DeepSeek.DefaultModel();
+        Assert.Equal("deepseek-flash", model.Id);
+        using var request = AiRequest.Build(AiProvider.DeepSeek, " sk-test ", model, ["Get in the car."], []);
+        Assert.Equal("https://api.deepseek.com/chat/completions", request.RequestUri!.AbsoluteUri);
+        Assert.Equal("Bearer sk-test", string.Join("", request.Headers.GetValues("Authorization")));
+        using var body = System.Text.Json.JsonDocument.Parse(request.Content!.ReadAsStringAsync().Result);
+        var root = body.RootElement;
+        Assert.Equal("deepseek-flash", root.GetProperty("model").GetString());
+        Assert.Equal("disabled", root.GetProperty("thinking").GetProperty("type").GetString());
+        Assert.Equal("system", root.GetProperty("messages")[0].GetProperty("role").GetString());
+        Assert.Contains("Arabic", root.GetProperty("messages")[0].GetProperty("content").GetString());
+        Assert.Contains("into Arabic", root.GetProperty("messages")[1].GetProperty("content").GetString());
+        // The answer is read like OpenAI's.
+        Assert.Equal("[\"اركب السيارة.\"]", AiRequest.Text(AiProvider.DeepSeek,
+            "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"[\\\"اركب السيارة.\\\"]\"}}]}"));
+    }
+
     private sealed class FakeEngine : ISentenceEngine
     {
         public int Calls;
