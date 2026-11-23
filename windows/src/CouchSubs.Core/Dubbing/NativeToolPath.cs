@@ -32,7 +32,7 @@ public static partial class NativeToolPath
         foreach (var root in fallbackRoots)
         {
             if (string.IsNullOrEmpty(root) || !IsAscii(root)) continue;
-            var target = Path.Combine(root, "CouchSubs", "models", "tts-tr", DubbingModel.Revision, "tokenizer.model");
+            var target = Path.Combine(root, CouchSubs.Core.Fork.DataFolder, "models", "tts-tr", DubbingModel.Revision, "tokenizer.model");
             try
             {
                 copy(file, target);

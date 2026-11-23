@@ -27,3 +27,6 @@ core/Sources/CouchSubsCore/Resources/packs/*.json.gz
 core/Sources/CouchSubsCore/Resources/packs/*.json
 tools/packs/katki/*.json.gz
 tools/packs/katki/GTA_HAVUZ_KATKI.md
+
+# Faz3a fork: machine-specific build settings (model folder path)
+windows/Directory.Build.local.props

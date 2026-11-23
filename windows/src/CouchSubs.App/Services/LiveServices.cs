@@ -17,11 +17,12 @@ namespace CouchSubs.App.Services;
 public sealed class LiveServices : IAppServices
 {
     public IXboxService? Xbox { get; } = new XboxService();
-    public ITranslationModel Translation { get; } = new MarianModel();
+    // Faz3a fork: offline English→Arabic (opus-mt-tc-big-en-ar, ONNX) instead of the upstream English→Turkish model.
+    public ITranslationModel Translation { get; } = new ArabicModel();
 
     // DeepL yalnız İngilizce→Türkçe için açılır; önceki oturumların çevirileri kotadan yemeden yeniden kullanılır.
     public ITextTranslator? MakeOnlineTranslator(string key, ITextTranslator? fallback) =>
-        new DeepLTranslator(key, fallback, cache: TranslationCache.Shared(AppPaths.Translations, DeepLTranslator.EngineId, "en", "tr"));
+        new DeepLTranslator(key, fallback, cache: TranslationCache.Shared(AppPaths.Translations, DeepLTranslator.EngineId, "en", Fork.TargetLanguage));
 
     public Task<OnlineKeyCheck> CheckOnlineKeyAsync(string key) => DeepLTranslator.CheckAsync(key);
 
@@ -29,7 +30,7 @@ public sealed class LiveServices : IAppServices
     // Ek talimat aynı önbellekte kalır; anahtar talimatın etiketiyle ayrılır (bkz. AiTranslator.CacheKey).
     public ITextTranslator? MakeAiTranslator(AiProvider provider, string key, string model, ITextTranslator? fallback, Func<string?>? game,
                                              string? instruction = null, bool paidTier = false) =>
-        new AiTranslator(provider, key, model, fallback, cache: TranslationCache.Shared(AppPaths.Translations, provider.EngineId(model), "en", "tr"),
+        new AiTranslator(provider, key, model, fallback, cache: TranslationCache.Shared(AppPaths.Translations, provider.EngineId(model), "en", Fork.TargetLanguage),
                          game: game, instruction: instruction, paidTier: paidTier);
 
     public Task<AiTestResult> TestAiKeyAsync(AiProvider provider, string key, string model) => AiTranslator.TestAsync(provider, key, model);
@@ -37,7 +38,7 @@ public sealed class LiveServices : IAppServices
     // Yerel model: önbellekte sunucu ve model ayrı tutulur ("local:localhost:11434/qwen2.5:7b").
     public ITextTranslator? MakeLocalAiTranslator(LocalAiServer server, string key, ITextTranslator? fallback, Func<string?>? game,
                                                   string? instruction = null) =>
-        new AiTranslator(AiProvider.Local, key, server.Model, fallback, cache: TranslationCache.Shared(AppPaths.Translations, server.EngineId, "en", "tr"),
+        new AiTranslator(AiProvider.Local, key, server.Model, fallback, cache: TranslationCache.Shared(AppPaths.Translations, server.EngineId, "en", Fork.TargetLanguage),
                          server: server, game: game, instruction: instruction);
 
     public Task<AiTestResult> TestLocalAiAsync(LocalAiServer server, string key) =>
@@ -47,29 +48,22 @@ public sealed class LiveServices : IAppServices
     public IOcrModel? AdvancedOcr => advancedOcr;
     public IDubbingModel? FastDubbing { get; } = WindowsVoiceModel.Available ? new WindowsVoiceModel() : null;
     public IAudioOutput? Audio { get; } = new WindowsAudioOutput();
-    public IUpdater? Updater { get; } = new Updater();
+    // Faz3a fork: the upstream updater checks and installs CouchSubs releases from GitHub; this build must never
+    // replace itself with CouchSubs, so there is no updater until the fork has its own release channel.
+    public IUpdater? Updater { get; } = Fork.UpdatesEnabled ? new Updater() : null;
     public IFirewall? Firewall { get; } = new WindowsFirewall();
-    // Oyun paketleri: uygulamaya gömülü olanlar ve %LOCALAPPDATA%\CouchSubs\packs klasöründekiler.
-    public GamePackLibrary? GamePacks { get; } = new(GamePackLibrary.EmbeddedPacks, GamePackLibrary.UserDirectory);
-    public PackMatch? FindInPacks(string text) => GamePacks is { } packs ? PackLookup.Match(packs, text) : null;
-    public PackPartial? FindPartialInPacks(string text) => GamePacks is { } packs ? PackLookup.MatchPartial(packs, text) : null;
-    public LinePool? Pool { get; } = new(Path.Combine(AppPaths.Data, "pool.json"),
-        AppVersion.Current(System.Reflection.Assembly.GetEntryAssembly() ?? typeof(LiveServices).Assembly));
+    // Faz3a fork: no per-game packs, no shared line pool, no usage statistics and no pack downloads. With these set to
+    // null the controller never matches, queues, uploads or downloads anything (PacksActive, StartPacksAndPool,
+    // RefreshPacksAsync all check for null). No subtitle line ever leaves this computer except to the translation
+    // service the user picked with their own key.
+    public GamePackLibrary? GamePacks => null;
+    public PackMatch? FindInPacks(string text) => null;
+    public PackPartial? FindPartialInPacks(string text) => null;
+    public LinePool? Pool => null;
     public string? HistoryFile { get; } = Path.Combine(AppPaths.Data, "history.json");
-    // Kullanım verisi: ölçüm kimliği ve API sırrı derlemeden (CouchSubsGaMeasurementId, CouchSubsGaApiSecret); yoksa kapalı.
-    public UsageStats? Usage { get; } = UsageStats.Config.FromBuild() is { } usage
-        ? new UsageStats(usage, Path.Combine(AppPaths.Data, "usage-id"),
-            AppVersion.Current(System.Reflection.Assembly.GetEntryAssembly() ?? typeof(LiveServices).Assembly),
-            "Windows " + Environment.OSVersion.Version)
-        : null;
+    public UsageStats? Usage => null;
     public Task<RunningGame?> RunningGameAsync(string host) => ConsoleDiscovery.RunningGameAsync(host);
-    // Paket sunucusu ve uygulama sırrı yapılandırıldıysa (COUCHSUBS_PACKS_URL ya da derlemedeki CouchSubsPacksUrl;
-    // CouchSubsPacksSecret) indirilen paketler kullanıcının paket klasörüne gider. Adres ya da sır yoksa (yerel geliştirici
-    // derlemesi; sunucu imzasız isteği reddeder) kapalı.
-    public PackUpdater? PackUpdates { get; } = PackUpdater.ConfiguredBaseUrl() is { } url && PackSigning.ConfiguredSecret() is { } secret
-        ? new PackUpdater(url, GamePackLibrary.UserDirectory, Path.Combine(AppPaths.Data, "packs-remote.json"),
-            fallbackUrls: PackUpdater.ConfiguredFallbackUrl() is { } fallback ? [fallback] : null, secret: secret)
-        : null;
+    public PackUpdater? PackUpdates => null;
 
     public async Task<IReadOnlyList<ConsoleInfo>> DiscoverConsolesAsync()
     {
@@ -509,40 +503,25 @@ public sealed class LiveServices : IAppServices
         public void Reconnect() => keeper.Reconnect();
     }
 
-    /// <summary>OPUS-MT modelleri; şimdilik yalnız İngilizce→Türkçe.</summary>
-    private sealed class MarianModel : ITranslationModel
+    /// <summary>
+    /// Faz3a fork: the offline English→Arabic model (opus-mt-tc-big-en-ar by Helsinki-NLP / OPUS-MT, CC-BY-4.0, converted
+    /// to ONNX and 8-bit by Faz3a). It ships next to the app in models\opus-mt-en-ar (see ArabicModelFiles.Find); there is
+    /// no download server for it, so "Download" only looks for it again.
+    /// </summary>
+    private sealed class ArabicModel : ITranslationModel
     {
-        private readonly Ct2ModelStore englishTurkish = new(Path.Combine(AppPaths.Models, "en-tr-ct2"));
-        private readonly CudaRuntimeStore cuda = new(Path.Combine(AppPaths.Data, "cuda-12.8"));
-        private MarianTranslator? translator;
-        private Task? cudaDownload;
-        private TranslationDevice device = TranslationDevice.Cpu;
-        private int cpuThreads = CpuThreadOptions.Default;
+        private ArabicOfflineTranslator? translator;
+        private int cpuThreads = 4;
         private int failed;
 
         public event Action? EngineFailure;
-        public event Action? GpuFallback;
 
-        public void SelectDevice(TranslationDevice selected)
-        {
-            if (device == selected) return;
-            device = selected;
-            // NVIDIA sürücüsü (nvcuda.dll) yoksa ~565 MB indirme boşa gider; doğrudan CPU'ya düşülür.
-            if (selected == TranslationDevice.Gpu && File.Exists(Path.Combine(Environment.SystemDirectory, "nvcuda.dll")))
-            {
-                cudaDownload = cuda.StartDownload();
-                _ = cudaDownload.ContinueWith(task =>
-                    StartupGuard.Log("CUDA çalışma zamanı indirilemedi", task.Exception!),
-                    CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
-            }
-            translator?.Dispose();
-            translator = null;
-            Interlocked.Exchange(ref failed, 0);
-        }
+        public void SelectDevice(TranslationDevice selected) { }
 
         public void SelectCpuThreads(int selected)
         {
-            selected = CpuThreadOptions.Normalize(selected, Environment.ProcessorCount);
+            // The ONNX model runs well with up to 4 threads; more threads mostly take CPU away from the game.
+            selected = Math.Clamp(CpuThreadOptions.Normalize(selected, Environment.ProcessorCount) * 2, 1, 4);
             if (cpuThreads == selected) return;
             cpuThreads = selected;
             translator?.Dispose();
@@ -552,68 +531,52 @@ public sealed class LiveServices : IAppServices
 
         public bool EngineFailed => Volatile.Read(ref failed) != 0;
 
-        /// <summary>
-        /// Motor açılamadı: hata.log'a bir kez yazılır, ana ekran uyarı gösterir. En sık neden: CTranslate2
-        /// çalışma zamanı ya da Visual C++ DLL'leri eksik.
-        /// </summary>
         private void Fail(Exception error)
         {
             if (Interlocked.Exchange(ref failed, 1) != 0) return;
-            StartupGuard.Log("Ücretsiz çeviri motoru açılamadı (CTranslate2)", error);
+            StartupGuard.Log("Offline Arabic model could not be opened (ONNX)", error);
             EngineFailure?.Invoke();
         }
 
-        public bool IsSupported(string source, string target) => source == "en" && target == "tr";
+        private static string? Folder => ArabicModelFiles.Find(AppPaths.Models);
 
-        public bool IsInstalled(string source, string target) => IsSupported(source, target) && englishTurkish.IsInstalled;
+        public bool IsSupported(string source, string target) => source == "en" && target == Fork.TargetLanguage;
 
-        public async Task DownloadAsync(string source, string target, IProgress<double> progress, CancellationToken cancellationToken)
+        public bool IsInstalled(string source, string target) => IsSupported(source, target) && Folder is not null;
+
+        public Task DownloadAsync(string source, string target, IProgress<double> progress, CancellationToken cancellationToken)
         {
-            try
+            if (Folder is not null)
             {
-                await englishTurkish.DownloadAsync(progress, cancellationToken);
+                progress.Report(1);
+                return Task.CompletedTask;
             }
-            catch (Exception error) when (error is not OperationCanceledException)
-            {
-                // Ekran yalnız "internet bağlantınızı kontrol edin" der; asıl neden (TLS, disk, antivirüs, özet) hata.log'da kalsın.
-                StartupGuard.Log("Ücretsiz çeviri modeli indirilemedi", error);
-                throw;
-            }
-            // Önceki sürümlerin ONNX modeli (yaklaşık 530 MB) artık kullanılmaz; yeni model kurulunca silinir.
-            try
-            {
-                var old = Path.Combine(AppPaths.Models, "en-tr");
-                if (Directory.Exists(old)) Directory.Delete(old, recursive: true);
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-            {
-                StartupGuard.Log("Eski ONNX çeviri modeli silinemedi", error);
-            }
+            var error = new FileNotFoundException(
+                $"The offline Arabic model is missing. Put its files ({string.Join(", ", ArabicModelFiles.Required)}) in " +
+                Path.Combine(AppContext.BaseDirectory, "models", ArabicModelFiles.FolderName));
+            StartupGuard.Log("Offline Arabic model not found", error);
+            return Task.FromException(error);
         }
 
-        // Model belleğe bir kez yüklenir; dil değişse de aynı çevirmen kullanılır. Yükleme 1–3 sn sürdüğü
-        // için hemen arka planda başlar; ilk altyazı beklemez.
+        // The model is loaded once and kept; loading takes a second or two, so it starts in the background right away.
         public ITextTranslator Create(string source, string target)
         {
             if (translator is not null) return translator;
-            MarianTranslator created;
+            var folder = Folder ?? throw new TranslatorException(TranslatorStatus.NeedsDownload);
+            ArabicOfflineTranslator created;
             try
             {
-                created = new MarianTranslator(englishTurkish.InstallDirectory,
-                    cache: TranslationCache.Shared(AppPaths.Translations, MarianTranslator.EngineId, "en", "tr"),
-                    useGpu: device == TranslationDevice.Gpu, onGpuFallback: () => GpuFallback?.Invoke(),
-                    cudaReady: cudaDownload, cudaDirectory: cuda.InstallDirectory,
-                    cpuThreads: cpuThreads);
+                created = new ArabicOfflineTranslator(folder,
+                    TranslationCache.Shared(AppPaths.Translations, ArabicOfflineTranslator.EngineId, "en", Fork.TargetLanguage),
+                    cpuThreads);
             }
             catch (Exception error)
             {
-                // Önbellek ya da sözlük okunamadı; denetleyici bu hat için çeviriyi kapatır, sonraki başlatmada yeniden denenir.
-                StartupGuard.Log("Ücretsiz çevirmen kurulamadı", error);
+                StartupGuard.Log("Offline Arabic translator could not be set up", error);
                 throw;
             }
             created.EngineFailed += Fail;
             translator = created;
-            // WarmUpAsync hata fırlatmaz; motor açılamazsa EngineFailed ile bildirir.
             _ = created.WarmUpAsync();
             return created;
         }

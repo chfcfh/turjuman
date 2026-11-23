@@ -14,3 +14,10 @@ requires you to, among other things:
     (section 5a);
   - license the whole work under the AGPL-3.0 and provide its source code
     (sections 5c and 6).
+
+----------------------------------------------------------------------------
+This copy is a MODIFIED VERSION of CouchSubs.
+Based on CouchSubs by Sinan Yorulmaz (https://github.com/yorulmazsinan/couchsubs),
+modified by Faz3a starting on 2026-11-23 (Arabic target and interface, DeepSeek,
+offline English->Arabic model; game packs, shared pool, usage data, updates and
+ads removed). The changes are listed in FORK-NOTICE.md.

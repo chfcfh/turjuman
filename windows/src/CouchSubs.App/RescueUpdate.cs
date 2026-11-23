@@ -69,6 +69,9 @@ internal static class RescueUpdate
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void Run()
     {
+        // Faz3a fork: never download or install releases from the upstream CouchSubs repository. This build has
+        // no update channel of its own yet (see FORK-NOTICE.md), so the rescue update does nothing.
+        if (!CouchSubs.Core.Fork.UpdatesEnabled) return;
         var manager = new UpdateManager(new GithubSource(Repository, null, false));
         if (!manager.IsInstalled) return;
         var download = Task.Run(async () =>

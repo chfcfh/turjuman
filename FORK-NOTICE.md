@@ -1,0 +1,34 @@
+# Modified version of CouchSubs
+
+This program is a **modified version of CouchSubs**
+(https://github.com/yorulmazsinan/couchsubs), Copyright (C) 2026 Sinan Yorulmaz, licensed under the
+GNU AGPL-3.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)).
+
+**Modified by Faz3a, starting on 2026-11-23.** The working name of this modified version is «ترجمان» (Turjuman);
+the final name is still to be chosen. It is a separate program from Faz3a's own app.
+
+## What was changed (Windows app, `windows/`)
+
+- **Arabic target.** Every translation goes English → Arabic (`Fork.TargetLanguage`). The AI prompt
+  (`AiTranslator.cs`) asks for clear Modern Standard Arabic in the style of Arabic game localizations; DeepL targets `AR`.
+- **Offline English → Arabic model.** `OnnxMarianEngine.cs` and `ArabicOfflineTranslator.cs` run
+  opus-mt-tc-big-en-ar (Helsinki-NLP / OPUS-MT, CC BY 4.0) in an ONNX int8 conversion made by Faz3a. It replaces the
+  English → Turkish CTranslate2 model. The model (~370 MB) is not in git: it is copied next to the app from the folder
+  named by `ArabicModelDir` in the git-ignored `windows/Directory.Build.local.props`, or found in
+  `models\opus-mt-en-ar` next to the exe / in `%LOCALAPPDATA%\Faz3aSubs\models`.
+- **DeepSeek** added as a translation engine with the user's own key (`AiProvider.DeepSeek`, OpenAI-compatible
+  `https://api.deepseek.com/chat/completions`, thinking mode off; models `deepseek-flash` and `deepseek-v4-pro`).
+- **Arabic interface** with right-to-left layout; Arabic subtitles are drawn right to left in the subtitle bar.
+- **Removed / switched off:** game packs, the shared line pool (no subtitle line is ever uploaded), usage statistics,
+  pack downloads, self-update and rescue update from the upstream GitHub releases, and the ad band / pop-up ads for
+  the upstream publisher's other apps.
+- **Defaults** for PC games: the picture is read from a game window on this PC and the subtitles are shown in the
+  subtitle bar on the PC screen.
+- Data folder `%LOCALAPPDATA%\Faz3aSubs` (never the upstream app's `CouchSubs` folder); executable `Faz3aSubs.exe`.
+
+The subtitle area presets, the subtitle stabilizer and the single subtitle bar are unchanged from CouchSubs.
+
+## Source code
+
+Under the AGPL-3.0, anyone who receives this program, or uses it over a network, must be able to get its complete
+source code. This modified version's source must be published before the program is given to anyone.

@@ -11,5 +11,9 @@
   "claude": [
     { "id": "claude-haiku-5-5", "label": "Fast and cheap (recommended)", "effort": "low", "thinking": "disabled" },
     { "id": "claude-sonnet-5-5", "label": "Better quality, a little slower", "effort": "low", "thinking": "between_tools" }
+  ],
+  "deepseek": [
+    { "id": "deepseek-flash", "label": "Fast and cheap (recommended)", "thinking": "disabled" },
+    { "id": "deepseek-v4-pro", "label": "Better quality, a little slower", "thinking": "disabled" }
   ]
 }

@@ -10,7 +10,7 @@
     <!-- Yalnız tepsi simgesi (NotifyIcon) için; WinForms türleri tam adla kullanılır. -->
     <UseWindowsForms>true</UseWindowsForms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>CouchSubs</AssemblyName>
+    <AssemblyName>Faz3aSubs</AssemblyName>
     <RootNamespace>CouchSubs.App</RootNamespace>
     <ApplicationIcon>Assets\CouchSubs.ico</ApplicationIcon>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -55,13 +55,17 @@
     <Resource Include="Assets\enmera-black.png" />
     <!-- Yeni arayüzün renk, yazı, ölçü ve hareket değerleri (Mac ile ortak; Theme/Palette.cs okur). -->
     <EmbeddedResource Include="..\..\..\design\yeni-arayuz\tasarim.json" LogicalName="tasarim.json" />
-    <!-- Alt reklam bandı (Cebbin, Gramla, Bakkal): Mac ile ortak liste ve simgeler (Services/AdCatalog.cs). -->
-    <EmbeddedResource Include="..\..\..\design\yeni-arayuz\reklamlar.json" LogicalName="reklamlar.json" />
-    <Resource Include="..\..\..\design\yeni-arayuz\reklam\*.png" Link="Assets\reklam\%(Filename)%(Extension)" />
-    <!-- Açılır reklamın görseli (reklamlar.json › popups; Mac aynı dosyayı okur). -->
-    <Resource Include="..\..\..\design\yeni-arayuz\reklam\*.jpg" Link="Assets\reklam\%(Filename)%(Extension)" />
+    <!-- Faz3a fork: the upstream ad band and pop-up ads (Enmera's own apps) are not built in. Without reklamlar.json
+         AdCatalog returns no banners and no pop-ups, so neither is ever shown. -->
     <!-- ShellWindow.xaml pencere simgesi olarak bunu okur; ApplicationIcon yalnız exe simgesidir. -->
     <Resource Include="Assets\CouchSubs.ico" />
+  </ItemGroup>
+
+  <!-- Faz3a fork: the offline English→Arabic model (opus-mt-tc-big-en-ar, CC-BY-4.0, ~370 MB) is copied next to the app
+       into models\opus-mt-en-ar when ArabicModelDir points at its files. It is too large for git. -->
+  <ItemGroup Condition="'$(ArabicModelDir)' != '' And Exists('$(ArabicModelDir)\encoder.onnx')">
+    <Content Include="$(ArabicModelDir)\encoder.onnx;$(ArabicModelDir)\step.onnx;$(ArabicModelDir)\meta.json;$(ArabicModelDir)\source.spm;$(ArabicModelDir)\vocab.json;$(ArabicModelDir)\LICENSE.txt"
+             Link="models\opus-mt-en-ar\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- TV uygulaması paketleri (scripts/package-tv.sh, package-tizen.sh ve Android derlemesi üretir); geliştirici modu açık TV'ye kurulur. -->

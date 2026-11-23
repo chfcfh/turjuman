@@ -33,6 +33,8 @@ public static class StoreKeys
     public const string GeminiKey = "geminiKey";
     public const string OpenAiKey = "openAIKey";
     public const string ClaudeKey = "claudeKey";
+    /// <summary>Faz3a fork: the user's DeepSeek key (encrypted store, never logged).</summary>
+    public const string DeepSeekKey = "deepSeekKey";
     /// <summary>Yerel model sunucusunun (Ollama, LM Studio) isteğe bağlı anahtarı.</summary>
     public const string LocalAiKey = "localAIKey";
     /// <summary>Kurulum sihirbazı bitti. TV'siz kurulumda (altyazı bilgisayar ekranında) ana ekranı bu açar.</summary>
@@ -111,7 +113,7 @@ public readonly record struct DisplayArea(string Name, ScreenArea Area);
 /// TranslationEngine ile aynı).
 /// </summary>
 [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TranslationEngine>))]
-public enum TranslationEngine { Free, DeepL, Gemini, OpenAi, Claude, Local }
+public enum TranslationEngine { Free, DeepL, Gemini, OpenAi, Claude, Local, DeepSeek }
 
 /// <summary>Windows'taki ücretsiz OPUS-MT çevirisinin çalışacağı aygıt.</summary>
 [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TranslationDevice>))]
@@ -137,6 +139,7 @@ public static class TranslationEngines
         TranslationEngine.OpenAi => AiProvider.OpenAi,
         TranslationEngine.Claude => AiProvider.Claude,
         TranslationEngine.Local => AiProvider.Local,
+        TranslationEngine.DeepSeek => AiProvider.DeepSeek,
         _ => null,
     };
 
@@ -145,6 +148,7 @@ public static class TranslationEngines
         AiProvider.Gemini => TranslationEngine.Gemini,
         AiProvider.OpenAi => TranslationEngine.OpenAi,
         AiProvider.Local => TranslationEngine.Local,
+        AiProvider.DeepSeek => TranslationEngine.DeepSeek,
         _ => TranslationEngine.Claude,
     };
 
@@ -201,6 +205,7 @@ public static class TranslationEngines
         TranslationEngine.OpenAi => StoreKeys.OpenAiKey,
         TranslationEngine.Claude => StoreKeys.ClaudeKey,
         TranslationEngine.Local => StoreKeys.LocalAiKey,
+        TranslationEngine.DeepSeek => StoreKeys.DeepSeekKey,
         _ => null,
     };
 }
@@ -309,7 +314,8 @@ public sealed record UserSettings
     /// <summary>Gelişmiş: yarım görünen satırın tamamı için en çok bekletileceği süre (ms; 0: beklenmez).</summary>
     public int PartialWaitMs { get; init; } = SubtitlePipeline.CleanWaitMs;
     public string SourceLanguage { get; init; } = "en";
-    public string TargetLanguage { get; init; } = "tr";
+    /// <summary>Faz3a fork: always Arabic (older files that say "tr" are read as Arabic, see the setter).</summary>
+    public string TargetLanguage { get; init => field = Fork.TargetLanguage; } = Fork.TargetLanguage;
     /// <summary>Eski ayar dosyalarında bulunmaz; varsayılan CPU'dur. GPU yalnız NVIDIA CUDA içindir.</summary>
     public TranslationDevice TranslationDevice { get; init; } = TranslationDevice.Cpu;
     /// <summary>Windows CTranslate2 CPU iç işlemlerinin iş parçacığı sayısı; eski ayarlarda 2.</summary>
@@ -402,6 +408,7 @@ public sealed record UserSettings
     public bool GeminiPaidTier { get; init; }
     public string OpenAiModel { get; init; } = AiProvider.OpenAi.DefaultModel().Id;
     public string ClaudeModel { get; init; } = AiProvider.Claude.DefaultModel().Id;
+    public string DeepSeekModel { get; init; } = AiProvider.DeepSeek.DefaultModel().Id;
     /// <summary>
     /// Yerel model sunucusunun adresi (Ollama: http://127.0.0.1:11434/v1, LM Studio: http://localhost:1234/v1) ve
     /// kullanıcının yazdığı model adı.
@@ -414,21 +421,24 @@ public sealed record UserSettings
     /// </summary>
     public string AiInstruction { get; init; } = "";
     /// <summary>Altyazı TV'de mi, bilgisayar ekranındaki pencerede mi, ikisinde de mi. Eski kayıtlar TV ile açılır.</summary>
-    public SubtitleOutput Output { get; init; } = SubtitleOutput.Tv;
+    public SubtitleOutput Output { get; init; } = SubtitleOutput.Computer;
     /// <summary>Bilgisayar ekranındaki altyazı penceresi tıklamaları alttaki pencereye (oyun, PS Remote Play) geçirir.</summary>
     public bool OverlayClickThrough { get; init; }
     /// <summary>Altyazı penceresinin son yeri; null ise ana ekranın altında ortada açılır.</summary>
     public OverlayBounds? Overlay { get; init; }
     /// <summary>Oyun paketlerindeki hazır Türkçe çeviriler kullanılır (yalnız İngilizce→Türkçe).</summary>
-    public bool GamePacks { get; init; } = true;
+    /// <summary>Faz3a fork: game packs are removed; always off.</summary>
+    public bool GamePacks { get => false; init { } }
     /// <summary>Pakette bulunmayan İngilizce satırlar ortak havuza gönderilir (anonim; bkz. <see cref="LinePool"/>).</summary>
-    public bool SharePool { get; init; } = LinePool.EnabledByDefault;
+    /// <summary>Faz3a fork: the shared line pool is removed; always off, nothing is ever sent.</summary>
+    public bool SharePool { get => false; init { } }
     /// <summary>Oynanan oyun paketle tanınmazsa çeviri başladıktan iki dakika sonra bir kez sorulur (bkz. <see cref="GameSense"/>).</summary>
-    public bool AskGame { get; init; } = true;
+    public bool AskGame { get; init; }
     /// <summary>Kullanım verisi: telefonlardaki gibi kimliğe bağlanmayan kullanım istatistikleri gönderilir (bkz. <see cref="UsageStats"/>).</summary>
-    public bool UsageData { get; init; } = UsageStats.EnabledByDefault;
+    /// <summary>Faz3a fork: usage statistics are removed; always off.</summary>
+    public bool UsageData { get => false; init { } }
     /// <summary>Kullanım verisi bilgi notu gösterildi (ilk açılışta bir kez). Eski ayar dosyalarında yoktur (false).</summary>
-    public bool UsageNoticeSeen { get; init; }
+    public bool UsageNoticeSeen { get; init; } = true;
     /// <summary>Altyazıdaki konuşan adı ("ARTHUR: …") çeviride gösterilir; kapalıysa yalnız Türkçe cümle görünür.</summary>
     public bool ShowSpeakerNames { get; init; } = true;
     /// <summary>
@@ -443,7 +453,8 @@ public sealed record UserSettings
     /// <summary>Ayarlar › Temel › Geçiş Animasyonları: kapalıyken yeni arayüzde yalnız kısa solma. Eski ayar dosyalarında yoktur; açık.</summary>
     public bool TransitionAnimations { get; init; } = true;
     /// <summary>Görüntü PS5 bağlantısından mı, bu bilgisayardaki Remote Play penceresinden mi okunur.</summary>
-    public FrameSource FrameSource { get; init; } = FrameSource.Ps5;
+    /// <summary>Faz3a fork: PC games, so the picture comes from a window on this computer by default.</summary>
+    public FrameSource FrameSource { get; init; } = FrameSource.CaptureWindow;
     /// <summary>Xbox seçiliyken görüntü Xbox bağlantısından mı, seçilen pencereden mi okunur (bkz. <see cref="Shell.XboxFrameSource"/>).</summary>
     public XboxFrameSource XboxFrameSource { get; init; } = XboxFrameSource.Xbox;
     /// <summary>Xbox karelerini #244 öncesindeki 200 ms aralıkla al; varsayılan 66 ms.</summary>
@@ -474,6 +485,7 @@ public sealed record UserSettings
         AiProvider.Gemini => GeminiModel,
         AiProvider.OpenAi => OpenAiModel,
         AiProvider.Local => LocalAiModel,
+        AiProvider.DeepSeek => DeepSeekModel,
         _ => ClaudeModel,
     };
 
@@ -482,6 +494,7 @@ public sealed record UserSettings
         AiProvider.Gemini => this with { GeminiModel = id },
         AiProvider.OpenAi => this with { OpenAiModel = id },
         AiProvider.Local => this with { LocalAiModel = id },
+        AiProvider.DeepSeek => this with { DeepSeekModel = id },
         _ => this with { ClaudeModel = id },
     };
 

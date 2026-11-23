@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
+    <!-- Faz3a fork: runs the offline English→Arabic model (ONNX). Same package and version as the app's PP-OCR reader. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
   </ItemGroup>
 
   <ItemGroup>

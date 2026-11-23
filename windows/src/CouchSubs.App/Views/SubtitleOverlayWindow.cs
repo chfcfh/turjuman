@@ -77,7 +77,7 @@ public sealed partial class SubtitleOverlayWindow : Window
         ShowInTaskbar = false;
         ShowActivated = false;
         Focusable = false;
-        Title = "CouchSubs";
+        Title = CouchSubs.Core.Fork.Name;
         topmost = new TopmostKeeper(this);
 
         var root = new Grid();

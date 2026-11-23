@@ -140,6 +140,7 @@
                                 <c:OptionCard GroupName="engine" Tag="Free" Content="{t:T 'Free Translation'}" Description="{t:T 'On this computer, offline'}" MinHeight="72" Checked="OnEngineOption" />
                                 <c:OptionCard GroupName="engine" Tag="Gemini" Content="Google Gemini" Description="{t:T 'Better translation with a free Google key.'}" MinHeight="72" Checked="OnEngineOption" />
                                 <c:OptionCard GroupName="engine" Tag="DeepL" Content="DeepL" Description="{t:T 'With your own DeepL key.'}" MinHeight="72" Checked="OnEngineOption" />
+                                <c:OptionCard GroupName="engine" Tag="DeepSeek" Content="DeepSeek" Description="{t:T 'Good, cheap Arabic with your own DeepSeek key.'}" MinHeight="72" Checked="OnEngineOption" />
                                 <c:OptionCard GroupName="engine" Tag="OpenAi" Content="OpenAI" Description="{t:T 'With your own key.'}" MinHeight="72" Checked="OnEngineOption" />
                                 <c:OptionCard GroupName="engine" Tag="Claude" Content="Anthropic Claude" Description="{t:T 'With your own key.'}" MinHeight="72" Checked="OnEngineOption" />
                                 <c:OptionCard GroupName="engine" Tag="Local" Content="{t:T 'Local Model'}" Description="{t:T 'Ollama or LM Studio; no quota.'}" MinHeight="72" Checked="OnEngineOption" />
@@ -150,6 +151,7 @@
                                         <ComboBoxItem Content="{t:T 'Free (on this computer)'}" Tag="Free" />
                                         <ComboBoxItem Content="DeepL" Tag="DeepL" />
                                         <ComboBoxItem Content="Google Gemini" Tag="Gemini" />
+                                        <ComboBoxItem Content="DeepSeek" Tag="DeepSeek" />
                                         <ComboBoxItem Content="OpenAI" Tag="OpenAi" />
                                         <ComboBoxItem Content="Anthropic Claude" Tag="Claude" />
                                         <ComboBoxItem Content="{t:T 'Local model (Ollama, LM Studio)'}" Tag="Local" />

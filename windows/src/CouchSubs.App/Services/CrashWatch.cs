@@ -164,7 +164,7 @@ internal static class CrashWatch
                 var source = entry.Source;
                 if (source != "Application Error" && (onlyFaults || source is not (".NET Runtime" or "Windows Error Reporting"))) continue;
                 var message = entry.Message;
-                if (!message.Contains("CouchSubs", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!message.Contains(System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name ?? "Faz3aSubs", StringComparison.OrdinalIgnoreCase)) continue;
                 if (message.Length > 6000) message = message[..6000] + "…";
                 found.Add((entry.TimeGenerated, $"[{entry.TimeGenerated:yyyy-MM-dd HH:mm:ss}] {source}:\n{message}"));
             }

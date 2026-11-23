@@ -12,7 +12,7 @@ public static class AppDataPaths
 {
     /// <summary>Kullanıcının gerçek klasörü.</summary>
     public static string RealRoot =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CouchSubs");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), CouchSubs.Core.Fork.DataFolder);
 
     private static string? redirected;
 

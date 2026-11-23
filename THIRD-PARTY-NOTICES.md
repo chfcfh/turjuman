@@ -4,6 +4,18 @@ CouchSubs is licensed under the GNU AGPL-3.0 (see [LICENSE](LICENSE)). It includ
 following third-party components. Full source code for CouchSubs, including the build scripts that
 produce the bundled libraries, is available at https://github.com/yorulmazsinan/couchsubs.
 
+## Modified version (Faz3a fork, Windows)
+
+This copy is a modified version of CouchSubs (see [FORK-NOTICE.md](FORK-NOTICE.md)). In addition to the components
+below, its Windows app bundles:
+
+| Component | License | Source |
+|---|---|---|
+| OPUS-MT English→Arabic translation model `opus-mt-tc-big-en-ar` (converted to ONNX and quantized to 8-bit by Faz3a; translations unchanged in method, greedy decoding) | CC BY 4.0 | Jörg Tiedemann et al., Language Technology Research Group, University of Helsinki — https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-ar, https://creativecommons.org/licenses/by/4.0/ |
+
+The model's own notice travels with it as `models/opus-mt-en-ar/LICENSE.txt`. The English→Turkish model, game packs
+and the Turkish dubbing engine listed below are not used by this modified version.
+
 ## Bundled in the Mac and Windows apps
 
 | Component | License | Source |

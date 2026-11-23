@@ -5,10 +5,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Version>0.1.0</Version>
-    <Company>Enmera</Company>
-    <Product>CouchSubs</Product>
-    <Copyright>AGPL-3.0. Uses chiaki-ng (AGPL-3.0).</Copyright>
+    <Company>Faz3a (modified from CouchSubs by Sinan Yorulmaz, Enmera)</Company>
+    <Product>Turjuman</Product>
+    <Copyright>AGPL-3.0. Based on CouchSubs, Copyright (C) 2026 Sinan Yorulmaz; modified by Faz3a in 2026. Uses chiaki-ng (AGPL-3.0).</Copyright>
     <!-- WPF projesi Mac'te de derlenebilsin (çalıştırmak için Windows gerekir). -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
+  <!-- Faz3a fork: machine-specific settings that must not be committed (for example ArabicModelDir, the folder holding
+       the offline English→Arabic model files). The file is git-ignored; see FORK-NOTICE.md. -->
+  <Import Project="Directory.Build.local.props" Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.local.props')" />
 </Project>

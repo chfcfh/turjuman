@@ -225,7 +225,8 @@ public sealed class DeepLTranslator : ITextTranslator, IOnlineTranslator
     private async Task<string[]> RequestAsync(List<string> sentences, string? context, bool tagged, CancellationToken cancellationToken)
     {
         // Oyun konuşması: "siz" değil "sen" (DeepL Türkçede desteklemiyorsa yok sayar).
-        var body = new TranslateRequest(sentences, "EN", "TR", context, "prefer_less", true,
+        // Faz3a fork: Arabic target. DeepL has no formality for Arabic; "prefer_less" is ignored there without an error.
+        var body = new TranslateRequest(sentences, "EN", "AR", context, "prefer_less", true,
             tagged ? "xml" : null, tagged ? [DeepLMarkup.Tag] : null);
         using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(BaseUri(_key), "translate"))
         {

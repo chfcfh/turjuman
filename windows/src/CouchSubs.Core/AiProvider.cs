@@ -10,7 +10,8 @@ namespace CouchSubs.Core;
 /// gider, anahtar isteğe bağlıdır, model adını kullanıcı yazar.
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<AiProvider>))]
-public enum AiProvider { Gemini, OpenAi, Claude, Local }
+/// Faz3a fork: <c>DeepSeek</c> added (OpenAI-compatible Chat Completions at api.deepseek.com, the user's own key).
+public enum AiProvider { Gemini, OpenAi, Claude, Local, DeepSeek }
 
 public static class AiProviders
 {
@@ -38,6 +39,7 @@ public static class AiProviders
         AiProvider.Gemini => "Gemini",
         AiProvider.OpenAi => "OpenAI",
         AiProvider.Local => "Local model",
+        AiProvider.DeepSeek => "DeepSeek",
         _ => "Claude",
     };
 
@@ -47,6 +49,7 @@ public static class AiProviders
         AiProvider.Gemini => "https://aistudio.google.com/apikey",
         AiProvider.OpenAi => "https://platform.openai.com/api-keys",
         AiProvider.Local => "https://ollama.com/download",
+        AiProvider.DeepSeek => "https://platform.deepseek.com/api_keys",
         _ => "https://platform.claude.com/settings/keys",
     });
 
@@ -56,6 +59,7 @@ public static class AiProviders
         AiProvider.Gemini => "gemini",
         AiProvider.OpenAi => "openai",
         AiProvider.Local => "local",
+        AiProvider.DeepSeek => "deepseek",
         _ => "claude",
     };
 

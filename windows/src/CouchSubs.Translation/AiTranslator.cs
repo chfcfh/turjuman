@@ -31,20 +31,26 @@ public static class AiRequest
     /// <summary>"Ekranı çevir"in tek isteğinde çıktı sınırı: ekrandaki bütün yazılar birlikte döner.</summary>
     public const int ScreenOutputTokens = 8192;
 
+    /// <summary>
+    /// Faz3a fork: the upstream prompt targeted spoken Turkish (sen/siz, Turkish imperatives). This one targets Arabic the
+    /// way good Arabic game localizations read: clear Modern Standard Arabic, not stiff or word-for-word. A dialect can
+    /// still be asked for in Settings › "Extra instruction", which is appended to this prompt.
+    /// </summary>
     public const string SystemPrompt =
-        "You translate English video game subtitles into natural, spoken Turkish, the way people really talk. " +
-        "Characters address each other informally (use \"sen\", not \"siz\") unless the line is clearly formal. " +
-        "Keep character names, place names and speaker labels such as \"ATREUS:\" exactly as they are. " +
-        "Keep line breaks. Keep the meaning and tone; do not add or leave out anything. " +
-        // #296: OCR kaçan/yanlış harfler ve önceki altyazının devamı olan satırlar.
+        "You translate English video game subtitles into natural Arabic for Arab players. " +
+        "Use clear, easy Modern Standard Arabic in the style of good Arabic game localizations: natural and spoken in tone, " +
+        "never stiff, old-fashioned or word-for-word. Do not add diacritics (tashkeel) unless a word would be misread without them. " +
+        "Keep speaker labels such as \"ATREUS:\" exactly as they are. Inside sentences, write character and place names in " +
+        "Arabic letters as they sound (\"Arthur\" becomes \"آرثر\"); never translate a name's meaning (\"Price\" stays a name, " +
+        "not \"سعر\"). Keep line breaks. Keep the meaning and tone, including insults and swearing at the same strength; " +
+        "do not add or leave out anything. " +
         "The text is read from the screen by OCR and may have misread or missing letters (\"Y u ave to ask?\", " +
         "\"Doesn't 00k good.\"); translate the line the speaker clearly meant. " +
         "A subtitle may continue the previous one (it starts in lowercase or with a word like \"and\"); " +
         "translate it so that it reads as that continuation. " +
-        // #827: menü ve görev etiketi kısa, tekil emir kipi ("Para Kazan", "Para Kazanın" değil).
         "Short menu items, objectives and button labels without a subject (\"Make Money\", \"Find Donnie's Package\") " +
-        "are commands to the player: translate them as short singular informal imperatives (\"Para Kazan\", " +
-        "\"Donnie'nin Paketini Bul\"), never polite or plural forms such as \"Para Kazanın\". " +
+        "are commands to the player: translate them as short imperatives to one person (\"اكسب المال\", \"ابحث عن طرد دوني\"). " +
+        "Write numbers with the digits 0-9. " +
         "Reply with only the translation, no explanations, notes or quotes.";
 
     /// <summary>Kullanıcının ek talimatında en çok bu kadar karakter gider (fazlası kesilir).</summary>
@@ -85,20 +91,20 @@ public static class AiRequest
         var parts = new List<string>();
         if (!string.IsNullOrEmpty(game)) parts.Add($"Game: {game}");
         if (names is { Count: > 0 })
-            parts.Add($"Character names (keep them exactly as written, do not translate them): {string.Join(", ", names)}");
+            parts.Add($"Character names (names, not words: do not translate their meaning, write them in Arabic letters as they sound): {string.Join(", ", names)}");
         if (context.Count > 0)
         {
             var lines = new List<string> { "Previous subtitles, for context only (do not translate them again):" };
             foreach (var line in context)
             {
                 lines.Add($"English: {line.Source}");
-                if (line.Translation is { } translation) lines.Add($"Turkish: {translation}");
+                if (line.Translation is { } translation) lines.Add($"Arabic: {translation}");
             }
             parts.Add(string.Join("\n", lines));
         }
         var list = new JsonArray([.. sentences.Select(s => (JsonNode?)JsonValue.Create(s))]).ToJsonString(Compact);
-        parts.Add($"Translate each string in this JSON array into Turkish. Reply with only a JSON array of {sentences.Count} " +
-                  $"Turkish strings in the same order.\n{list}");
+        parts.Add($"Translate each string in this JSON array into Arabic. Reply with only a JSON array of {sentences.Count} " +
+                  $"Arabic strings in the same order.\n{list}");
         return string.Join("\n\n", parts);
     }
 
@@ -161,6 +167,23 @@ public static class AiRequest
                     ["max_completion_tokens"] = maxOutputTokens,
                 };
                 if (model.Effort is { } effort) body["reasoning_effort"] = effort;
+                break;
+            case AiProvider.DeepSeek:
+                // Faz3a fork. api-docs.deepseek.com (checked November 2026): POST https://api.deepseek.com/chat/completions,
+                // OpenAI format with a Bearer key; "system" role and "max_tokens" are supported. Thinking mode is on by
+                // default and would only slow a subtitle down, so it is turned off with {"thinking": {"type": "disabled"}}.
+                request = new HttpRequestMessage(HttpMethod.Post, "https://api.deepseek.com/chat/completions");
+                request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {key}");
+                body = new JsonObject
+                {
+                    ["model"] = model.Id,
+                    ["messages"] = new JsonArray(
+                        new JsonObject { ["role"] = "system", ["content"] = system },
+                        new JsonObject { ["role"] = "user", ["content"] = user }),
+                    ["max_tokens"] = maxOutputTokens,
+                    ["stream"] = false,
+                    ["thinking"] = new JsonObject { ["type"] = model.Thinking ?? "disabled" },
+                };
                 break;
             case AiProvider.Local:
                 // Ollama ve LM Studio'nun OpenAI uyumlu Chat Completions'ı: POST {adres}/chat/completions. Yalnız iki
@@ -232,7 +255,7 @@ public static class AiRequest
                         .Where(p => p?["thought"]?.GetValueKind() is not JsonValueKind.True)
                         .Select(p => p?["text"]?.GetValue<string>() ?? ""));
                     break;
-                case AiProvider.OpenAi or AiProvider.Local:
+                case AiProvider.OpenAi or AiProvider.Local or AiProvider.DeepSeek:
                     text = root?["choices"]?.AsArray().FirstOrDefault()?["message"]?["content"]?.GetValue<string>();
                     break;
                 default:
@@ -393,10 +416,11 @@ public static class AiRequest
     /// içinde google.rpc.QuotaFailure (violations[].quotaId, ör. "GenerateRequestsPerMinutePerProjectPerModel-FreeTier",
     /// quotaValue "15") ve google.rpc.RetryInfo (retryDelay "37s") bulunur.
     /// </summary>
-    public static AiRateLimit? RateLimit(HttpStatusCode status, string body)
+    public static AiRateLimit? RateLimit(HttpStatusCode status, string body, AiProvider? provider = null)
     {
         if ((int)status != 429) return null;
-        if (IsTemporaryProviderRateLimit(body)) return new AiRateLimit();
+        // Faz3a fork, DeepSeek: 429 always means "too many requests" (no balance is 402), so it is a short pause.
+        if (provider == AiProvider.DeepSeek || IsTemporaryProviderRateLimit(body)) return new AiRateLimit();
         JsonArray? details;
         try { details = JsonNode.Parse(body)?["error"]?["details"] as JsonArray; }
         catch (JsonException) { return null; }
@@ -884,7 +908,7 @@ public sealed class AiTranslator : ITextTranslator, IOnlineTranslator
     {
         if (!response.IsSuccessStatusCode)
         {
-            if (AiRequest.RateLimit(response.StatusCode, body) is { } limit) throw new AiRateLimitedException(limit);
+            if (AiRequest.RateLimit(response.StatusCode, body, Provider) is { } limit) throw new AiRateLimitedException(limit);
             throw new AiException(AiRequest.Failure(response.StatusCode, body));
         }
         return AiRequest.Translations(AiRequest.Text(Provider, body), count);

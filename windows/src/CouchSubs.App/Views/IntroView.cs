@@ -29,7 +29,7 @@ public sealed class IntroView : UserControl
     private readonly Rectangle bar2 = Part(222, 186, 196, 50, 25, Color.FromRgb(0xF5, 0xB8, 0x3D));
     private readonly Canvas seat = new() { Width = 640, Height = 494 };
     private readonly Ellipse glow = new() { Width = 520, Height = 300 };
-    private readonly TextBlock word = new() { Text = "CouchSubs", FontSize = 34, FontWeight = FontWeights.Bold, Foreground = Light, HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly TextBlock word = new() { Text = CouchSubs.Core.Fork.Name, FontSize = 34, FontWeight = FontWeights.Bold, Foreground = Light, HorizontalAlignment = HorizontalAlignment.Center };
     private readonly StackPanel by = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
     private readonly StackPanel cta = new() { HorizontalAlignment = HorizontalAlignment.Center, Margin = Sp.T("0", "m", "0", "0") };
 
