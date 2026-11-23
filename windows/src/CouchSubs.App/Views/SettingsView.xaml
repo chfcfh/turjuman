@@ -841,7 +841,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Button Content="{t:T 'About CouchSubs'}" Click="OnAbout" />
-                                    <Button Grid.Column="2" Content="{t:T 'Set Up Again…'}" Style="{StaticResource DangerButton}" Click="OnReset" />
+                                    <Button x:Name="ResetButton" Grid.Column="2" Content="{t:T 'Set Up Again…'}" Style="{StaticResource DangerButton}" Click="OnReset" />
                                 </Grid>
                             </c:SpacedStack>
                         </c:Card>

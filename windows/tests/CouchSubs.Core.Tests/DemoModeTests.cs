@@ -46,10 +46,10 @@ public class DemoModeTests
     public void ScriptMatchesTheSharedLines()
     {
         Assert.Equal(12, DemoScript.Lines.Count);
-        Assert.Equal(new DemoScript.Line("We should reach the lighthouse before dark.", "Hava kararmadan deniz fenerine varmalıyız."), DemoScript.Lines[0]);
-        Assert.Equal(new DemoScript.Line("I found a map in the old captain's cabin.", "Yaşlı kaptanın kamarasında bir harita buldum."), DemoScript.Lines[3]);
-        Assert.Equal(new DemoScript.Line("Rest now. Tomorrow will be a long day.", "Şimdi dinlen. Yarın uzun bir gün olacak."), DemoScript.Lines[11]);
-        Assert.Equal(new DemoScript.Line("Objective: Reach the lighthouse", "Görev: Deniz fenerine ulaş"), DemoScript.Objective);
+        Assert.Equal(new DemoScript.Line("We should reach the lighthouse before dark.", "لازم نوصل للمنارة قبل لا يظلم."), DemoScript.Lines[0]);
+        Assert.Equal(new DemoScript.Line("I found a map in the old captain's cabin.", "لقيت خريطة في غرفة القبطان العجوز."), DemoScript.Lines[3]);
+        Assert.Equal(new DemoScript.Line("Rest now. Tomorrow will be a long day.", "ارتاح الحين. بكرة يوم طويل."), DemoScript.Lines[11]);
+        Assert.Equal(new DemoScript.Line("Objective: Reach the lighthouse", "المهمة: وصّل للمنارة"), DemoScript.Objective);
         Assert.Equal((1280, 720, 0.86), (DemoFrames.Width, DemoFrames.Height, DemoFrames.SubtitleBaseline));
     }
 
@@ -67,7 +67,8 @@ public class DemoModeTests
         if (source is null) return;
         var pairs = System.Text.RegularExpressions.Regex.Matches(source, "Line\\(english: \"([^\"]+)\", turkish: \"([^\"]+)\"\\)")
             .Select(match => new DemoScript.Line(match.Groups[1].Value, match.Groups[2].Value)).ToList();
-        Assert.Equal(DemoScript.Lines.Append(DemoScript.Objective).ToList(), pairs);
+        // Faz3a fork: the translations are Arabic here and Turkish in the Swift source; the English lines must still match.
+        Assert.Equal(DemoScript.Lines.Append(DemoScript.Objective).Select(line => line.English).ToList(), pairs.Select(line => line.English).ToList());
         var defaults = new DemoFrameSource(DemoFrames.Plain);
         Assert.Contains($"lineSeconds: Double = {defaults.LineSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}", source);
         Assert.Contains($"gapSeconds: Double = {defaults.GapSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}", source);

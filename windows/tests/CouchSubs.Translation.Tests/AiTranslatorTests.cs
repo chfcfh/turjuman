@@ -49,8 +49,9 @@ public class AiTranslatorTests
     [Fact]
     public void SystemPromptAsksForSingularImperativeLabels()
     {
-        Assert.Contains("singular informal imperatives", AiRequest.SystemPrompt);
-        Assert.Contains("\"Para Kazan\"", AiRequest.SystemPrompt);
+        // Faz3a fork: Arabic prompt; menu labels become short imperatives to one person.
+        Assert.Contains("short imperatives to one person", AiRequest.SystemPrompt);
+        Assert.Contains("\"اكسب المال\"", AiRequest.SystemPrompt);
     }
 
     [Fact]
@@ -252,7 +253,7 @@ public class AiTranslatorTests
         Assert.Equal(2, handler.Bodies.Count);
         // İptal edilen repliğin kaynağı bağlamda kalır; üretilmemiş Türkçe sonuç eklenmez.
         Assert.Contains("English: Hold the gate.", handler.Bodies[1]);
-        Assert.DoesNotContain("Turkish:", handler.Bodies[1]);
+        Assert.DoesNotContain("Arabic:", handler.Bodies[1]);
     }
 
     private static HttpResponseMessage Json(string json, HttpStatusCode status = HttpStatusCode.OK) =>
@@ -336,7 +337,7 @@ public class AiTranslatorTests
         await translator.TranslateAsync("PRICE: Move.");
         Assert.DoesNotContain("Character names", User(fake, 0));
         await translator.TranslateAsync("SOLDIER: Price, get down!");
-        Assert.Contains("Character names (keep them exactly as written, do not translate them): Price\n", User(fake, 1));
+        Assert.Contains("Character names (names, not words: do not translate their meaning, write them in Arabic letters as they sound): Price\n", User(fake, 1));
         Assert.DoesNotContain("Soldier", User(fake, 1));
         await translator.TranslateAsync("It looks ghostly, price is high.");
         Assert.DoesNotContain("Character names", User(fake, 2));
@@ -440,7 +441,8 @@ public class AiTranslatorTests
     {
         var file = Path.Combine(RepoRoot(), "core", "Sources", "CouchSubsCore", "Resources", "ai-models.json");
         var parsed = AiModel.Parse(File.ReadAllText(file));
-        Assert.Equal(["claude", "gemini", "openai"], parsed.Keys.Order());
+        // Faz3a fork: DeepSeek added.
+        Assert.Equal(["claude", "deepseek", "gemini", "openai"], parsed.Keys.Order());
         Assert.Equal(parsed.Keys.Order(), AiProviders.Cloud.Select(p => p.Id()).Order());
         // Yerel modelin listesi yoktur; model adını kullanıcı yazar.
         Assert.Empty(AiProvider.Local.Models());
@@ -452,7 +454,7 @@ public class AiTranslatorTests
             Assert.Equal("Fast and cheap (recommended)", provider.DefaultModel().Label);
             Assert.Equal(provider.Models().Count, provider.Models().Select(m => m.Id).Distinct().Count());
             // Etiketler ortak metin dosyasında çevrilmiş olmalı.
-            Assert.NotEqual(provider.DefaultModel().Label, Localizer.ForLanguage("tr")[provider.DefaultModel().Label]);
+            Assert.NotEqual(provider.DefaultModel().Label, Localizer.ForLanguage("ar")[provider.DefaultModel().Label]);
         }
         Assert.Equal(new AiModel("gemini-3.5-flash-lite", "Fast and cheap (recommended)", FreeTier: true, RequestsPerMinute: 15),
                      AiProvider.Gemini.DefaultModel());
@@ -723,8 +725,8 @@ public class AiTranslatorTests
         foreach (var line in new[] { "One.", "Two.", "Two.", "Three.", "Four.", "Five." }) await translator.TranslateAsync(line);
         Assert.Equal(5, fake.Requests.Count);
         Assert.DoesNotContain("Previous subtitles", User(fake, 0));
-        Assert.Contains("English: One.\nTurkish: [tr] One.", User(fake, 1));
-        Assert.Contains("English: Two.\nTurkish: [tr] Two.\nEnglish: Three.\nTurkish: [tr] Three.\nEnglish: Four.\nTurkish: [tr] Four.", User(fake, 4));
+        Assert.Contains("English: One.\nArabic: [tr] One.", User(fake, 1));
+        Assert.Contains("English: Two.\nArabic: [tr] Two.\nEnglish: Three.\nArabic: [tr] Three.\nEnglish: Four.\nArabic: [tr] Four.", User(fake, 4));
         Assert.DoesNotContain("English: One.", User(fake, 4));
         Assert.DoesNotContain("English: Five.", User(fake, 4));
     }
@@ -744,7 +746,7 @@ public class AiTranslatorTests
         Assert.DoesNotContain("English: This belongs to the first game.", User(fake, 1));
 
         await translator.TranslateAsync("Another line here.");
-        Assert.Contains($"English: This belongs to the second game.\nTurkish: {secondTranslation}", User(fake, 2));
+        Assert.Contains($"English: This belongs to the second game.\nArabic: {secondTranslation}", User(fake, 2));
     }
 
     [Fact]

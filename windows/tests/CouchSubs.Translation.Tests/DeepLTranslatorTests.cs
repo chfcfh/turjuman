@@ -58,7 +58,7 @@ public class DeepLTranslatorTests
         Assert.Equal("DeepL-Auth-Key abc:fx", first.Headers.Authorization!.ToString());
         var json = JsonDocument.Parse(firstBody).RootElement;
         Assert.Equal("We move on.", json.GetProperty("text")[0].GetString());
-        Assert.Equal("TR", json.GetProperty("target_lang").GetString());
+        Assert.Equal("AR", json.GetProperty("target_lang").GetString());
         Assert.False(json.TryGetProperty("context", out _));
         Assert.Equal("KRATOS: We move on.", JsonDocument.Parse(deepL.Requests[1].Body).RootElement.GetProperty("context").GetString());
     }

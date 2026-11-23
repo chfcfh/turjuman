@@ -166,6 +166,8 @@ public partial class SettingsView : UserControl
     private void HideForkParts()
     {
         ForkHidden.Keep([.. Nav.Children.OfType<Controls.NavItem>().Where(item => item.Tag is "4" or "5")]);
+        // The local server listens on this PC only (SubtitleServer), so the network-only parts go too.
+        ForkHidden.Keep(SecondScreenCard, NetworkObsPanel, ResetButton);
         ForkHidden.Keep(TranslationDeviceUnit, ConsoleCard, PasscodeTab, HdmiCard, XboxPictureSourceCard, FrameSourceChoice, RemotePlayAppPanel,
             WindowSourceHint, SonyInstallRow, ChiakiInstallRow, Ps5SourceHint, Ps5LinkPanel, XboxWindowHint);
     }

@@ -598,8 +598,13 @@ public sealed class FileSettingsStore : ISettingsStore
 
     public UserSettings Load()
     {
-        try { return ExtraAreaMigration.Load(File.ReadAllText(FilePath)); }
-        catch (Exception error) when (error is IOException or JsonException or UnauthorizedAccessException) { return new UserSettings(); }
+        // Faz3a fork: the fork's rules are applied on every load (ForkSettings).
+        if (!File.Exists(FilePath)) return ForkSettings.Apply(new UserSettings(), fresh: true);
+        try { return ForkSettings.Apply(ExtraAreaMigration.Load(File.ReadAllText(FilePath)), fresh: false); }
+        catch (Exception error) when (error is IOException or JsonException or UnauthorizedAccessException)
+        {
+            return ForkSettings.Apply(new UserSettings(), fresh: true);
+        }
     }
 
     /// <summary>

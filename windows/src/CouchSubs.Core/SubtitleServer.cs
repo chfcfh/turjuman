@@ -354,7 +354,9 @@ public sealed class SubtitleServer(int port = 8787, TimeSpan? pingInterval = nul
     /// <summary>Sunucuyu başlatır ve dinlenen portu döner (<c>port: 0</c> ise rastgele seçilen port).</summary>
     public Task<int> StartAsync()
     {
-        var listener = new TcpListener(IPAddress.Any, port);
+        // Faz3a fork: PC games only, so the server (OBS overlay on this PC) listens on this computer only. Nothing on the
+        // network can reach it, and Windows does not ask for a firewall exception.
+        var listener = new TcpListener(IPAddress.Loopback, port);
         listener.Start();
         this.listener = listener;
         _ = AcceptLoop(listener);

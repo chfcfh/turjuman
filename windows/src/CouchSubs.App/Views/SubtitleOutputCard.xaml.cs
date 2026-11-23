@@ -42,7 +42,7 @@ public partial class SubtitleOutputCard : UserControl
         controller = attached;
         SecondScreenView.Attach(attached);
         // Faz3a fork: PC games only; no TV output.
-        ForkHidden.Keep(OutputTv, OutputBoth);
+        ForkHidden.Keep(OutputTv, OutputBoth, SecondScreenEntry, OutputNetworkObsPanel);
         Subscribe();
     }
 

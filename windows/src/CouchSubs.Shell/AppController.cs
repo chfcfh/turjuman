@@ -3952,7 +3952,7 @@ public sealed class AppController : INotifyPropertyChanged, IDisposable
 
     /// <summary>Çevrimiçi çeviri yalnız İngilizce→Türkçe için ve seçili motor hazırsa açılır.</summary>
     public bool OnlineTranslationActive =>
-        settings.OnlineTranslation && settings.SourceLanguage == "en" && settings.TargetLanguage == Fork.TargetLanguage && IsReady(settings.OnlineEngine);
+        settings.OnlineTranslation && settings.SourceLanguage == "en" && settings.TargetLanguage is "tr" or Fork.TargetLanguage && IsReady(settings.OnlineEngine);
 
     /// <summary>
     /// Motor kullanılabilir mi: bulut motorlarında anahtar kayıtlıdır; yerel modelde anahtar gerekmez, adres ve model adı

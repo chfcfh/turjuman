@@ -281,6 +281,30 @@ public static class ScreenTextExtrasMigration
         : settings with { GameAreaPresets = false, AutoReadGamePhone = false, ScreenTextExtrasReset = true };
 }
 
+/// <summary>
+/// Faz3a fork: the settings this fork always runs with, applied when the app loads its settings file (the settings type
+/// keeps the upstream defaults so the upstream tests stay meaningful). Arabic target; no game packs, shared pool or usage
+/// data. A fresh install (no settings file yet) also starts in the PC-game mode: picture from a game window on this PC,
+/// subtitles in the subtitle bar on this PC, no "which game?" question.
+/// </summary>
+public static class ForkSettings
+{
+    public static UserSettings Apply(UserSettings settings, bool fresh)
+    {
+        settings = settings with
+        {
+            TargetLanguage = Fork.TargetLanguage,
+            GamePacks = false,
+            SharePool = false,
+            UsageData = false,
+            UsageNoticeSeen = true,
+        };
+        return fresh
+            ? settings with { FrameSource = FrameSource.CaptureWindow, Output = SubtitleOutput.Computer, AskGame = false }
+            : settings;
+    }
+}
+
 public sealed record UserSettings
 {
     public CropRegion Region { get; init; } = new();
@@ -314,8 +338,7 @@ public sealed record UserSettings
     /// <summary>Gelişmiş: yarım görünen satırın tamamı için en çok bekletileceği süre (ms; 0: beklenmez).</summary>
     public int PartialWaitMs { get; init; } = SubtitlePipeline.CleanWaitMs;
     public string SourceLanguage { get; init; } = "en";
-    /// <summary>Faz3a fork: always Arabic (older files that say "tr" are read as Arabic, see the setter).</summary>
-    public string TargetLanguage { get; init => field = Fork.TargetLanguage; } = Fork.TargetLanguage;
+    public string TargetLanguage { get; init; } = "tr";
     /// <summary>Eski ayar dosyalarında bulunmaz; varsayılan CPU'dur. GPU yalnız NVIDIA CUDA içindir.</summary>
     public TranslationDevice TranslationDevice { get; init; } = TranslationDevice.Cpu;
     /// <summary>Windows CTranslate2 CPU iç işlemlerinin iş parçacığı sayısı; eski ayarlarda 2.</summary>
@@ -421,24 +444,21 @@ public sealed record UserSettings
     /// </summary>
     public string AiInstruction { get; init; } = "";
     /// <summary>Altyazı TV'de mi, bilgisayar ekranındaki pencerede mi, ikisinde de mi. Eski kayıtlar TV ile açılır.</summary>
-    public SubtitleOutput Output { get; init; } = SubtitleOutput.Computer;
+    public SubtitleOutput Output { get; init; } = SubtitleOutput.Tv;
     /// <summary>Bilgisayar ekranındaki altyazı penceresi tıklamaları alttaki pencereye (oyun, PS Remote Play) geçirir.</summary>
     public bool OverlayClickThrough { get; init; }
     /// <summary>Altyazı penceresinin son yeri; null ise ana ekranın altında ortada açılır.</summary>
     public OverlayBounds? Overlay { get; init; }
     /// <summary>Oyun paketlerindeki hazır Türkçe çeviriler kullanılır (yalnız İngilizce→Türkçe).</summary>
-    /// <summary>Faz3a fork: game packs are removed; always off.</summary>
-    public bool GamePacks { get => false; init { } }
+    public bool GamePacks { get; init; } = true;
     /// <summary>Pakette bulunmayan İngilizce satırlar ortak havuza gönderilir (anonim; bkz. <see cref="LinePool"/>).</summary>
-    /// <summary>Faz3a fork: the shared line pool is removed; always off, nothing is ever sent.</summary>
-    public bool SharePool { get => false; init { } }
+    public bool SharePool { get; init; } = LinePool.EnabledByDefault;
     /// <summary>Oynanan oyun paketle tanınmazsa çeviri başladıktan iki dakika sonra bir kez sorulur (bkz. <see cref="GameSense"/>).</summary>
-    public bool AskGame { get; init; }
+    public bool AskGame { get; init; } = true;
     /// <summary>Kullanım verisi: telefonlardaki gibi kimliğe bağlanmayan kullanım istatistikleri gönderilir (bkz. <see cref="UsageStats"/>).</summary>
-    /// <summary>Faz3a fork: usage statistics are removed; always off.</summary>
-    public bool UsageData { get => false; init { } }
+    public bool UsageData { get; init; } = UsageStats.EnabledByDefault;
     /// <summary>Kullanım verisi bilgi notu gösterildi (ilk açılışta bir kez). Eski ayar dosyalarında yoktur (false).</summary>
-    public bool UsageNoticeSeen { get; init; } = true;
+    public bool UsageNoticeSeen { get; init; }
     /// <summary>Altyazıdaki konuşan adı ("ARTHUR: …") çeviride gösterilir; kapalıysa yalnız Türkçe cümle görünür.</summary>
     public bool ShowSpeakerNames { get; init; } = true;
     /// <summary>
@@ -453,8 +473,7 @@ public sealed record UserSettings
     /// <summary>Ayarlar › Temel › Geçiş Animasyonları: kapalıyken yeni arayüzde yalnız kısa solma. Eski ayar dosyalarında yoktur; açık.</summary>
     public bool TransitionAnimations { get; init; } = true;
     /// <summary>Görüntü PS5 bağlantısından mı, bu bilgisayardaki Remote Play penceresinden mi okunur.</summary>
-    /// <summary>Faz3a fork: PC games, so the picture comes from a window on this computer by default.</summary>
-    public FrameSource FrameSource { get; init; } = FrameSource.CaptureWindow;
+    public FrameSource FrameSource { get; init; } = FrameSource.Ps5;
     /// <summary>Xbox seçiliyken görüntü Xbox bağlantısından mı, seçilen pencereden mi okunur (bkz. <see cref="Shell.XboxFrameSource"/>).</summary>
     public XboxFrameSource XboxFrameSource { get; init; } = XboxFrameSource.Xbox;
     /// <summary>Xbox karelerini #244 öncesindeki 200 ms aralıkla al; varsayılan 66 ms.</summary>
