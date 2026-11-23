@@ -7,9 +7,9 @@
 namespace CouchSubs.Core;
 
 /// <summary>
-/// Everything that names this fork in one place. The user-visible name is a placeholder until the owner picks one:
-/// change <see cref="Name"/> and <see cref="LatinName"/> here (and the Arabic strings that mention it in
-/// Resources/ar.json) and the whole interface follows.
+/// Everything that names this fork in one place. The owner chose «ترجمان» (Turjuman) on 2026-11-23. To rename, change
+/// <see cref="Name"/> and <see cref="LatinName"/> here; Resources/ar.json uses "{app}" for the name, so the whole
+/// interface follows.
 /// </summary>
 public static class Fork
 {

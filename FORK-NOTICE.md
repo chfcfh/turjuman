@@ -4,8 +4,8 @@ This program is a **modified version of CouchSubs**
 (https://github.com/yorulmazsinan/couchsubs), Copyright (C) 2026 Sinan Yorulmaz, licensed under the
 GNU AGPL-3.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)).
 
-**Modified by Faz3a, starting on 2026-11-23.** The working name of this modified version is «ترجمان» (Turjuman);
-the final name is still to be chosen. It is a separate program from Faz3a's own app.
+**Modified by Faz3a, starting on 2026-11-23.** This modified version is called «ترجمان» (Turjuman). It is a separate
+program from Faz3a's own app.
 
 ## What was changed (Windows app, `windows/`)
 
