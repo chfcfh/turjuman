@@ -74,7 +74,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Faz3a fork: the Xbox helper is not used (PC games only); its files are optional so a clean clone builds without npm. -->
     <Content Include="..\..\xbox-bridge\dist\bridge.cjs;..\..\xbox-bridge\dist\player.html;..\..\xbox-bridge\dist\player.js"
+             Condition="Exists('..\..\xbox-bridge\dist\bridge.cjs')"
              Link="xbox-bridge\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\xbox-bridge\dist\node.exe" Condition="Exists('..\..\xbox-bridge\dist\node.exe')"
              Link="xbox-bridge\node.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
