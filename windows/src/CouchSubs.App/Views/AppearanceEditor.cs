@@ -37,7 +37,7 @@ public sealed class AppearanceEditor : Grid
         ("Green", Rgb(0x68, 0xD3, 0x91)), ("Orange", Rgb(0xF6, 0x87, 0x4F)), ("Red", Rgb(0xF5, 0x65, 0x65)), ("Blue", Rgb(0x63, 0xB3, 0xED)),
     ];
     private static readonly int[] Darkness = [45, 75, 100];
-    private static readonly (string Name, string Line)[] Sample = [("Jason", "Tamam. Gidelim."), ("Lucia", "Yakınımda kal. Bunu birlikte yapacağız."), ("Cal", "Bir sürü silah sesi duyuyorum!")];
+    private static readonly (string Name, string Line)[] Sample = [("Jason", "تمام، يلا نمشي."), ("Lucia", "خلك قريب مني. بنسويها مع بعض."), ("Cal", "أسمع صوت رصاص كثير!")];
 
     private readonly AppController controller;
     private readonly StackPanel previewLines = new() { VerticalAlignment = VerticalAlignment.Bottom, HorizontalAlignment = HorizontalAlignment.Center, Margin = Sp.T("m") };

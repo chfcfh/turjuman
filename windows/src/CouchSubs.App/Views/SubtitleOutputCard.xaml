@@ -36,7 +36,7 @@
                 <c:Unit Title="{t:T 'Computer screen'}">
                     <StackPanel>
                         <TextBlock x:Name="WindowHint" Style="{StaticResource HintText}" Margin="{t:Sp '0,0,0,s'}"
-                                   Text="{t:T 'Subtitles appear in a window on this computer, over the game or PS Remote Play.'}" />
+                                   Text="{t:T 'Subtitles appear in a bar on this computer, over the game.'}" />
                         <Button x:Name="Adjust" Content="{t:T 'Position the subtitles'}" HorizontalAlignment="Left" Click="OnAdjust" />
                     </StackPanel>
                 </c:Unit>

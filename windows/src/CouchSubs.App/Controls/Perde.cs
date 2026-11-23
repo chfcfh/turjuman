@@ -696,6 +696,8 @@ public sealed class SubtitlePlate : Border
     {
         text.FontSize = size;
         text.LineHeight = Math.Round(size * 1.3);
+        // Faz3a fork: Arabic lines right to left.
+        text.FlowDirection = CouchSubs.App.Views.TextDirection.For(line);
         text.Inlines.Clear();
         if (!string.IsNullOrEmpty(speaker))
         {

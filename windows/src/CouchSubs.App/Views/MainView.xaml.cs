@@ -378,8 +378,9 @@ public partial class MainView : UserControl
         }).ToList();
         var fromPack = lines.Count(entry => entry.Origin == LineOrigin.Pack);
         var share = lines.Count == 0 ? 0 : (int)Math.Round(100.0 * fromPack / lines.Count);
-        PackCount.Text = fromPack.ToString(CultureInfo.CurrentCulture);
-        PackShare.Text = text.Format("From Pack · %lld%%", share);
+        // Faz3a fork: no game packs; this column shows how often the subtitle area is read instead.
+        PackCount.Text = controller.IsRunning ? ReadStats.LastReadsPerSecond.ToString("0.0", CultureInfo.InvariantCulture) : "–";
+        PackShare.Text = text["Reads per second"];
         var delays = controller.RecentDelaysMs;
         DelayValue.Text = delays.Count == 0 ? "–" : $"{(int)Math.Round(delays.Average())} ms";
         // Akış boşken durum hapı: çeviri sürüyorsa amber "Altyazı Bekleniyor", değilse gri "Çeviri Durdu".
@@ -411,8 +412,9 @@ public partial class MainView : UserControl
         switch (kind)
         {
             case HomeProblemKind.PictureStopped:
-                ProblemTitle.Text = text.Format("The PS5 picture hasn't arrived for %lld seconds.", pictureGap);
-                ProblemText.Text = text["The connection may have weakened. CouchSubs is trying to reconnect; if it doesn't, check that you're on the same Wi-Fi network as the PS5 and using 5 GHz."];
+                // Faz3a fork: the picture always comes from a game window on this PC.
+                ProblemTitle.Text = text.Format("The game window's picture hasn't arrived for %lld seconds.", pictureGap);
+                ProblemText.Text = text["Is the game window minimized or closed? Bring it back (not minimized) and translation continues by itself."];
                 break;
             case HomeProblemKind.MenuOpen:
                 ProblemTitle.Text = text["A menu is open in the game; there's no subtitle."];
@@ -431,7 +433,7 @@ public partial class MainView : UserControl
         {
             case HomeProblemKind.PictureStopped:
                 AddFix(text["Reconnect Now"], null, primary: true, () => controller.Reconnect());
-                AddFix(text["Open the Connection Test"], null, primary: false,
+                AddFix(text["Choose the game window"], null, primary: false,
                     () => SettingsView.Open(Window.GetWindow(this), controller, SettingsSection.PictureSource));
                 break;
             case HomeProblemKind.MenuOpen:

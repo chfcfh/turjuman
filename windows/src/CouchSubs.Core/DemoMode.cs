@@ -14,25 +14,26 @@ public static class DemoScript
 {
     public sealed record Line(string English, string Turkish);
 
-    /// <summary>Döngüde sırayla gösterilen altyazılar (özgün, telifsiz macera diyalogları).</summary>
+    /// <summary>Döngüde sırayla gösterilen altyazılar (özgün, telifsiz macera diyalogları). Faz3a fork: the second
+    /// field holds the Arabic translation (the record keeps its upstream name).</summary>
     public static readonly IReadOnlyList<Line> Lines =
     [
-        new("We should reach the lighthouse before dark.", "Hava kararmadan deniz fenerine varmalıyız."),
-        new("The bridge is gone. We need another way across.", "Köprü yıkılmış. Karşıya geçmek için başka bir yol lazım."),
-        new("Stay close to me and keep your voice down.", "Yanımdan ayrılma ve sesini alçak tut."),
-        new("I found a map in the old captain's cabin.", "Yaşlı kaptanın kamarasında bir harita buldum."),
-        new("Do you hear that? Something is moving in the fog.", "Duydun mu? Siste bir şey hareket ediyor."),
-        new("Light the lantern. We can't see a thing out here.", "Feneri yak. Burada hiçbir şey göremiyoruz."),
-        new("The storm will reach the harbor within an hour.", "Fırtına bir saat içinde limana ulaşacak."),
-        new("If we take the boat, we can be there by morning.", "Tekneyi alırsak sabaha orada olabiliriz."),
-        new("Thank you for coming back for me.", "Benim için geri döndüğün için teşekkürler."),
-        new("Keep the key safe. We will need it at the gate.", "Anahtarı sakla. Kapıda ona ihtiyacımız olacak."),
-        new("Follow the river north until you see the tower.", "Kuleyi görene kadar nehri kuzeye doğru takip et."),
-        new("Rest now. Tomorrow will be a long day.", "Şimdi dinlen. Yarın uzun bir gün olacak."),
+        new("We should reach the lighthouse before dark.", "لازم نوصل للمنارة قبل لا يظلم."),
+        new("The bridge is gone. We need another way across.", "الجسر طايح. نحتاج طريق ثاني نعبر منه."),
+        new("Stay close to me and keep your voice down.", "خلك جنبي ووطّ صوتك."),
+        new("I found a map in the old captain's cabin.", "لقيت خريطة في غرفة القبطان العجوز."),
+        new("Do you hear that? Something is moving in the fog.", "سمعت؟ فيه شي يتحرك في الضباب."),
+        new("Light the lantern. We can't see a thing out here.", "شغّل الفانوس. ما نشوف شي هنا."),
+        new("The storm will reach the harbor within an hour.", "العاصفة بتوصل الميناء خلال ساعة."),
+        new("If we take the boat, we can be there by morning.", "إذا أخذنا القارب نقدر نوصل الصبح."),
+        new("Thank you for coming back for me.", "مشكور إنك رجعت عشاني."),
+        new("Keep the key safe. We will need it at the gate.", "احتفظ بالمفتاح. بنحتاجه عند البوابة."),
+        new("Follow the river north until you see the tower.", "امشِ مع النهر شمال لين تشوف البرج."),
+        new("Rest now. Tomorrow will be a long day.", "ارتاح الحين. بكرة يوم طويل."),
     ];
 
     /// <summary>Karenin sol üstündeki görev yazısı ("Ekranı çevir" ve ek alanlar bunu da çevirir).</summary>
-    public static readonly Line Objective = new("Objective: Reach the lighthouse", "Görev: Deniz fenerine ulaş");
+    public static readonly Line Objective = new("Objective: Reach the lighthouse", "المهمة: وصّل للمنارة");
 
     /// <summary>Gömülü hazır çeviri: okunan metin örnek satırlardan birine benziyorsa Türkçesi (ağ ve anahtar gerekmez).</summary>
     public static string? Translation(string text)

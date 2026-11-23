@@ -19,6 +19,8 @@ internal static class SpeakerText
     /// <param name="nameOnly">Konuşan rengi yalnız adı boyar (yeni arayüz, <c>style.nameOnly</c>); satırın geri kalanı yazı renginde.</param>
     public static void Fill(TextBlock block, string shown, string source, bool enabled, SpeakerColorBook book, byte alpha = 255, bool nameOnly = false)
     {
+        // Faz3a fork: Arabic lines are laid out right to left (the full stop and Latin names land on the right side).
+        block.FlowDirection = TextDirection.For(shown);
         var names = enabled ? SpeakerColors.Speakers(source) : [];
         if (names.Count == 0)
         {

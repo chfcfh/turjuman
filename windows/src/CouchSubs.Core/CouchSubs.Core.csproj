@@ -17,6 +17,8 @@
     <!-- Oyun çeviri paketleri: Mac ile aynı klasör (ad: "packs/x.json.gz"). -->
     <EmbeddedResource Include="..\..\..\core\Sources\CouchSubsCore\Resources\packs\*.json.gz" LogicalName="packs/%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\..\mac\CouchSubs\Resources\Localizable.xcstrings" LogicalName="Localizable.xcstrings" />
+    <!-- Faz3a fork: Arabic interface text (English key → Arabic). -->
+    <EmbeddedResource Include="Resources\ar.json" LogicalName="ar.json" />
   </ItemGroup>
 
   <ItemGroup>

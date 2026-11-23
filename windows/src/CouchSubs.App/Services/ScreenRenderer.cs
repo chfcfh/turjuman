@@ -135,13 +135,13 @@ public static class ScreenRenderer
         var history = (SubtitleHistory)typeof(AppController).GetField("history", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(controller)!;
         foreach (var (source, translation) in new[]
                  {
-                     ("I gotta tell you this, Franklin.", "Bunu sana söylemem lazım, Franklin."),
-                     ("Take out the Lost.", "Lost üyelerini ortadan kaldır."),
-                     ("Are you listening to me?", "Dinliyor musun beni?"),
+                     ("I gotta tell you this, Franklin.", "لازم أقولك شي يا فرانكلين."),
+                     ("Take out the Lost.", "اقضِ على عصابة لوست."),
+                     ("Are you listening to me?", "أنت تسمعني؟"),
                  })
             history.Add(source, translation, LineOrigin.Engine);
         typeof(AppController).GetProperty(nameof(AppController.IsRunning))!.GetSetMethod(nonPublic: true)!.Invoke(controller, [true]);
-        typeof(AppController).GetProperty(nameof(AppController.LastTranslation))!.GetSetMethod(nonPublic: true)!.Invoke(controller, ["Dinliyor musun beni?"]);
+        typeof(AppController).GetProperty(nameof(AppController.LastTranslation))!.GetSetMethod(nonPublic: true)!.Invoke(controller, ["أنت تسمعني؟"]);
         return controller;
     }
 

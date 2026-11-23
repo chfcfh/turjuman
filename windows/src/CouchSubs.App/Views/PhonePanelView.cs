@@ -29,6 +29,7 @@ internal static class PhonePanelView
             var name = new TextBlock
             {
                 Text = title.Translation,
+                FlowDirection = TextDirection.For(title.Translation),
                 FontSize = fontSize * 1.05,
                 FontWeight = FontWeights.Bold,
                 Foreground = new SolidColorBrush(Parse(title.Style?.Foreground, foreground)),
@@ -68,6 +69,7 @@ internal static class PhonePanelView
         var text = new TextBlock
         {
             Text = item.Translation,
+            FlowDirection = TextDirection.For(item.Translation),
             FontSize = note ? fontSize * 0.8 : fontSize,
             FontWeight = note ? FontWeights.Medium : FontWeights.SemiBold,
             Foreground = new SolidColorBrush(Parse(item.Style?.Foreground, Colors.White)),

@@ -13,19 +13,29 @@ namespace CouchSubs.Core;
 public sealed class Localizer
 {
     private static readonly Lazy<Dictionary<string, Dictionary<string, string>>> Catalog = new(LoadCatalog);
+    /// <summary>
+    /// Faz3a fork: Arabic interface text (Resources/ar.json, English key → Arabic). "{app}" in a value is the app's
+    /// name (<see cref="Fork.Name"/>), so renaming the app does not mean editing every string.
+    /// </summary>
+    private static readonly Lazy<Dictionary<string, string>> Arabic = new(LoadArabic);
     private readonly string language;
 
     private Localizer(string language) => this.language = language;
 
-    public static Localizer ForLanguage(string language) => new(language.ToLowerInvariant().StartsWith("tr") ? "tr" : "en");
+    public static Localizer ForLanguage(string language)
+    {
+        var code = language.ToLowerInvariant();
+        return new(code.StartsWith("ar") ? "ar" : code.StartsWith("tr") ? "tr" : "en");
+    }
 
-    /// <summary>Windows'un arayüz diline göre: Türkçe değilse İngilizce.</summary>
-    public static Localizer Current { get; } = ForLanguage(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+    /// <summary>Faz3a fork: the interface is always Arabic (English for any string not translated yet).</summary>
+    public static Localizer Current { get; } = ForLanguage("ar");
 
     public string Language => language;
 
     public string this[string key] =>
-        Catalog.Value.TryGetValue(key, out var values) && values.TryGetValue(language, out var value) ? value : key;
+        language == "ar" ? Arabic.Value.TryGetValue(key, out var arabic) ? arabic : key
+        : Catalog.Value.TryGetValue(key, out var values) && values.TryGetValue(language, out var value) ? value : key;
 
     /// <summary>xcstrings biçim belirteçlerini (%@, %lld, %1$@ …) verilen değerlerle doldurur.</summary>
     public string Format(string key, params object[] args) => Fill(this[key], args);
@@ -59,6 +69,17 @@ public sealed class Localizer
             i = j;
         }
         return result.ToString();
+    }
+
+    private static Dictionary<string, string> LoadArabic()
+    {
+        using var stream = typeof(Localizer).Assembly.GetManifestResourceStream("ar.json");
+        if (stream is null) return [];
+        using var document = JsonDocument.Parse(stream);
+        var table = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var entry in document.RootElement.EnumerateObject())
+            table[entry.Name] = (entry.Value.GetString() ?? entry.Name).Replace("{app}", Fork.Name, StringComparison.Ordinal);
+        return table;
     }
 
     private static Dictionary<string, Dictionary<string, string>> LoadCatalog()

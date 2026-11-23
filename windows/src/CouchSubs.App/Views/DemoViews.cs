@@ -60,7 +60,7 @@ public sealed class DemoModeButton : DemoView
     {
         var glyph = new TextBlock { Text = Glyphs.Play, FontSize = 16, Margin = Sp.T("0", "0", "xs", "0"), VerticalAlignment = VerticalAlignment.Center };
         glyph.SetResourceReference(StyleProperty, "GlyphText");
-        var label = new TextBlock { Text = Localizer.Current["Try demo mode (no console needed)"], VerticalAlignment = VerticalAlignment.Center };
+        var label = new TextBlock { Text = Localizer.Current["Try demo mode (no game needed)"], VerticalAlignment = VerticalAlignment.Center };
         // Yazı ve simge düğmenin rengini alır (hayalet düğmede sarı, ikincilde birincil yazı rengi).
         foreach (var part in new[] { glyph, label })
             part.SetBinding(TextBlock.ForegroundProperty, new Binding(nameof(Foreground)) { Source = button });
@@ -138,7 +138,7 @@ public sealed class DemoModeCard : DemoView
         exit.SetResourceReference(StyleProperty, "SecondaryButton");
         exit.Click += (_, _) => Controller?.ExitDemo();
         var panel = new StackPanel();
-        panel.Children.Add(Hint("Demo mode shows the whole app with sample pictures built into the app. No console, account or TV is needed.", new Thickness(0)));
+        panel.Children.Add(Hint("Demo mode shows the whole app with sample pictures built into the app. No game is needed.", new Thickness(0)));
         panel.Children.Add(exit);
         panel.Children.Add(start);
         Content = new Card { Title = Localizer.Current["Demo mode"], Content = panel };

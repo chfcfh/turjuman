@@ -210,6 +210,7 @@ public sealed class FreeAreaWindow : Window
         var busy = text == Localizer.Current["Translating…"];
         resultState.Text = Localizer.Current[busy ? "Translating…" : "Translation"];
         resultText.Text = busy ? "…" : text;
+        resultText.FlowDirection = TextDirection.For(resultText.Text);
         resultPanel.Visibility = Visibility.Visible;
         resultPanel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         var size = resultPanel.DesiredSize;

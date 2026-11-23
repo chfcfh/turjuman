@@ -41,9 +41,9 @@
                         <c:NavItem Content="{t:T 'Subtitle Area'}" Hint="{t:T 'Frame, Extra Areas'}" Icon="&#xE8B3;" Tint="{DynamicResource oliveBrush}" Tag="3" Checked="OnNav" Margin="{t:Sp '0,0,0,xxs'}" />
                         <c:NavItem Content="{t:T 'Game Packs'}" Hint="{t:T 'Ready Translations'}" Icon="&#xE7B8;" Tint="{DynamicResource oliveBrush}" Tag="4" Checked="OnNav" Margin="{t:Sp '0,0,0,xxs'}" />
                         <c:NavItem Content="{t:T 'Turkish Dubbing'}" Hint="{t:T 'Voices, Characters'}" Icon="&#xE8D6;" Tint="{DynamicResource plumBrush}" Tag="5" Checked="OnNav" Margin="{t:Sp '0,0,0,xxs'}" />
-                        <c:NavItem Content="{t:T 'Output Screens'}" Hint="{t:T 'TV, OBS'}" Icon="&#xE7F4;" Tint="{DynamicResource tealBrush}" Tag="6" Checked="OnNav" Margin="{t:Sp '0,0,0,xxs'}" />
+                        <c:NavItem Content="{t:T 'Output Screens'}" Hint="{t:T 'This PC, OBS'}" Icon="&#xE7F4;" Tint="{DynamicResource tealBrush}" Tag="6" Checked="OnNav" Margin="{t:Sp '0,0,0,xxs'}" />
                         <c:NavItem Content="{t:T 'Keyboard Shortcuts'}" Hint="{t:T 'Translation Keys'}" Icon="&#xE765;" Tint="{DynamicResource skyBrush}" Tag="7" Checked="OnNav" Margin="{t:Sp '0,0,0,xxs'}" />
-                        <c:NavItem Content="{t:T 'Console and Source'}" Hint="{t:T 'PS5, Xbox'}" Icon="&#xE7FC;" Tint="{DynamicResource logoBackBrush}" Tag="8" Checked="OnNav" />
+                        <c:NavItem Content="{t:T 'Game Window'}" Hint="{t:T 'Choose the window'}" Icon="&#xE7FC;" Tint="{DynamicResource logoBackBrush}" Tag="8" Checked="OnNav" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -75,7 +75,7 @@
                                     </StackPanel>
                                 </c:Unit>
                                 <c:Unit Title="{t:T 'Translation Language'}" Hint="{t:T 'The game language is detected by itself.'}">
-                                    <TextBlock Text="{t:T 'Turkish'}" />
+                                    <TextBlock Text="{t:T 'Arabic'}" />
                                 </c:Unit>
                             </c:SpacedStack>
                         </c:Card>
@@ -104,7 +104,7 @@
                             <!-- Perde önizlemesi (16:9, 20 köşe, sıcak sahne + projeksiyon ışığı); altyazı ayarların renk ve boyuyla. -->
                             <ContentControl x:Name="MiniPreview" Focusable="False" />
                             <TextBlock Style="{StaticResource HintText}"
-                                       Text="{t:T 'Text size, background, text and character name colors. The settings apply the same on the TV, phone and computer screen.'}" />
+                                       Text="{t:T 'Text size, background, text and character name colors of the subtitle bar.'}" />
                             <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Click="OnEditAppearance">
                                 <DockPanel>
                                     <TextBlock DockPanel.Dock="Right" Text="→" />
@@ -159,7 +159,7 @@
                                     <TextBlock x:Name="EngineHint" Style="{StaticResource HintText}" Margin="{t:Sp '0,unitHint,0,0'}" />
                                 </StackPanel>
                             </c:Unit>
-                            <c:Unit Title="{t:T 'Free translation device'}">
+                            <c:Unit x:Name="TranslationDeviceUnit" Title="{t:T 'Free translation device'}">
                                 <StackPanel>
                                     <ComboBox x:Name="TranslationDeviceChoice" SelectionChanged="OnTranslationDevice">
                                         <ComboBoxItem Content="{t:T 'CPU (default)'}" Tag="Cpu" />
@@ -731,7 +731,7 @@
                                 <c:Unit Hint="{t:T 'If OBS runs on another computer, use the network address of this PC instead of localhost. The overlay only shows subtitles while the translation is running.'}">
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource HintText}" Margin="{t:Sp '0,0,0,s'}"
-                                                   Text="{t:T 'Streaming with a capture card? In OBS add a Browser source with this address (width 1920, height 1080). The Turkish subtitles appear over the game on your screen and on the stream.'}" />
+                                                   Text="{t:T 'Streaming with a capture card? In OBS add a Browser source with this address (width 1920, height 1080). The Arabic subtitles appear over the game on your screen and on the stream.'}" />
                                         <c:CopyField x:Name="ObsAddress" />
                                     </StackPanel>
                                 </c:Unit>

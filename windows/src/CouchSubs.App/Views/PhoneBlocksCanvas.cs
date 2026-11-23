@@ -60,6 +60,7 @@ internal sealed class PhoneBlocksCanvas : Canvas
             var text = new TextBlock
             {
                 Text = item.Translation,
+                FlowDirection = TextDirection.For(item.Translation),
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Parse(surface.Foreground, Colors.White)),
                 TextWrapping = TextWrapping.Wrap,

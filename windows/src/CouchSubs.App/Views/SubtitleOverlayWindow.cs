@@ -382,6 +382,7 @@ public sealed partial class SubtitleOverlayWindow : Window
             Child = new TextBlock
             {
                 Text = text,
+                FlowDirection = TextDirection.For(text),
                 FontSize = size,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(SpeakerText.Rgb(style.TextRgb)),

@@ -303,6 +303,7 @@ public sealed class SubtitlePipeline(ITextReader reader, ITextTranslator transla
             }
             quiet.Frames++;
         }
+        ReadStats.Frame();
         // Karede GTA 6 telefonu açıksa ekranındaki satırlar altyazı değildir (FindsPhone); telefon seyrek aranır
         // (GamePhoneTracker.IntervalMs), bulunan yer sonraki karelere de geçerlidir.
         bool looksForPhone;
@@ -345,6 +346,7 @@ public sealed class SubtitlePipeline(ITextReader reader, ITextTranslator transla
                 var read = recognized;
                 lock (gate) { if (recognized.Lines.Count == 0) quiet.Empty++; }
                 readMs = (int)Math.Clamp(now() - readStarted, 0, int.MaxValue);
+                ReadStats.Read(readMs.Value);
                 lock (gate)
                 {
                     if (startedSession == session)

@@ -155,7 +155,19 @@ public partial class SettingsView : UserControl
         Loaded += (_, _) => MoveSelection(false);
         NavHost.SizeChanged += (_, _) => MoveSelection(false);
         Unloaded += (_, _) => StopRecording();
+        HideForkParts();
         loading = false;
+    }
+
+    /// <summary>
+    /// Faz3a fork: PC games only. Game packs, Turkish dubbing, the PS5/Xbox console choice, the PS5 passcode, the TV
+    /// input and the Remote Play rows are hidden; the source section keeps only the game window picker.
+    /// </summary>
+    private void HideForkParts()
+    {
+        ForkHidden.Keep([.. Nav.Children.OfType<Controls.NavItem>().Where(item => item.Tag is "4" or "5")]);
+        ForkHidden.Keep(TranslationDeviceUnit, ConsoleCard, PasscodeTab, HdmiCard, XboxPictureSourceCard, FrameSourceChoice, RemotePlayAppPanel,
+            WindowSourceHint, SonyInstallRow, ChiakiInstallRow, Ps5SourceHint, Ps5LinkPanel, XboxWindowHint);
     }
 
     /// <summary>PS5 giriş şifresi kayıtlıysa yalnız "kaydedildi" görünür; şifrenin kendisi geri okunmaz.</summary>
@@ -900,7 +912,7 @@ public partial class SettingsView : UserControl
             option.IsChecked = (string)option.Tag == engine.ToString();
         EngineHint.Text = text[engine switch
         {
-            TranslationEngine.Free => "Free. The translation model built into CouchSubs runs on this computer; subtitle text never leaves it.",
+            TranslationEngine.Free => "Free. The offline English→Arabic model runs on this computer; subtitle text never leaves it.",
             TranslationEngine.DeepL => "Optional. With your own free DeepL key, translations read more naturally. Subtitle text is sent to DeepL; when DeepL cannot be reached, the translation model on this computer takes over.",
             TranslationEngine.Gemini => "Google's AI translates with the game's tone and keeps names as they are. Subtitle text is sent to Google with your own key, and any cost is billed to your Google account. When Gemini cannot be reached, the free translation takes over.",
             TranslationEngine.OpenAi => "OpenAI's AI translates with the game's tone and keeps names as they are. Subtitle text is sent to OpenAI with your own key, and any cost is billed to your OpenAI account. When OpenAI cannot be reached, the free translation takes over.",
@@ -1421,9 +1433,9 @@ public partial class SettingsView : UserControl
         ("\uE8B3", Controls.IconTone.Olive, "Subtitle Area", "Frame, Extra Areas"),
         ("\uE7B8", Controls.IconTone.Olive, "Game Packs", "Ready Translations"),
         ("\uE8D6", Controls.IconTone.Plum, "Turkish Dubbing", "Voices, Characters"),
-        ("\uE7F4", Controls.IconTone.Teal, "Output Screens", "TV, OBS"),
+        ("\uE7F4", Controls.IconTone.Teal, "Output Screens", "This PC, OBS"),
         ("\uE765", Controls.IconTone.Sky, "Keyboard Shortcuts", "Translation Keys"),
-        ("\uE7FC", Controls.IconTone.Gray, "Console and Source", "PS5, Xbox"),
+        ("\uE7FC", Controls.IconTone.Gray, "Game Window", "Choose the window"),
     ];
 
     /// <summary>
@@ -1472,11 +1484,12 @@ public partial class SettingsView : UserControl
         // Kaydırıcıdaki boy (16–50) yarıya (Mac ile aynı önizleme).
         MiniSubtitleText.FontSize = Math.Clamp(Math.Round((16 + (style.FontSize - 16) * 34.0 / 74) * 0.5), 8, 25);
         MiniSubtitleText.TextWrapping = TextWrapping.NoWrap;
+        MiniSubtitleText.FlowDirection = FlowDirection.RightToLeft;
         MiniSubtitleText.Inlines.Clear();
         var name = new System.Windows.Documents.Run("Jason: ");
         name.SetResourceReference(System.Windows.Documents.TextElement.ForegroundProperty, "accentBrush");
         MiniSubtitleText.Inlines.Add(name);
-        MiniSubtitleText.Inlines.Add(new System.Windows.Documents.Run(Localizer.Current.Language == "tr" ? "Tamam. Gidelim." : "Okay. Let's go."));
+        MiniSubtitleText.Inlines.Add(new System.Windows.Documents.Run("تمام، يلا نمشي."));
     }
 
 

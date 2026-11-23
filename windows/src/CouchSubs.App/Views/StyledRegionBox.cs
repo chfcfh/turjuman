@@ -39,6 +39,7 @@ internal static class StyledRegionBox
                 Child = new TextBlock
                 {
                     Text = block.Translation,
+                    FlowDirection = TextDirection.For(block.Translation),
                     FontSize = size,
                     FontFamily = look.Condensed ? Condensed : Normal,
                     FontWeight = look.Bold ? FontWeights.Bold : FontWeights.Normal,
@@ -71,6 +72,7 @@ internal static class StyledRegionBox
             Child = new TextBlock
             {
                 Text = text,
+                FlowDirection = TextDirection.For(text),
                 FontSize = size,
                 FontFamily = Normal,
                 FontWeight = FontWeights.SemiBold,
