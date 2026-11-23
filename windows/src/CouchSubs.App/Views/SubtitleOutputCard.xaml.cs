@@ -85,6 +85,7 @@ public partial class SubtitleOutputCard : UserControl
         WindowHint.Visibility = Detailed ? Visibility.Visible : Visibility.Collapsed;
         SecondScreenEntry.Visibility = Detailed ? Visibility.Collapsed : Visibility.Visible;
         ClickThrough.IsChecked = settings.OverlayClickThrough;
+        OverText.IsChecked = settings.TranslationOverText;
         ClickThroughHint.Visibility = Detailed || settings.OverlayClickThrough ? Visibility.Visible : Visibility.Collapsed;
         ClickThroughHint.Text = HotkeyText.Sentence(settings, HotkeyAction.ClickThrough,
             "When on, clicks go through to the window below. Press %@ to turn it off.");
@@ -102,6 +103,13 @@ public partial class SubtitleOutputCard : UserControl
     {
         if (loading || controller is null) return;
         controller.Settings = controller.Settings with { OverlayClickThrough = ClickThrough.IsChecked == true };
+    }
+
+    /// <summary>Faz3a fork: translations over their own text (InPlaceTextWindow), or all in the bar.</summary>
+    private void OnOverText(object sender, RoutedEventArgs e)
+    {
+        if (loading || controller is null) return;
+        controller.Settings = controller.Settings with { TranslationOverText = OverText.IsChecked == true };
     }
 
     private void OnAdjust(object sender, RoutedEventArgs e)

@@ -426,6 +426,8 @@ public sealed class RemotePlayWindowStream : IStreamSession
             item.Closed += (_, _) => owner.CaptureEnded(this, number, "pencere kapandı");
             pool.FrameArrived += OnFrameArrived;
             session.StartCapture();
+            // Faz3a fork: translations can be drawn over their text in this window (InPlaceTextWindow).
+            CaptureTarget.Set(window);
             SubtitleLog.Write($"pencere yakalanıyor: {Name}, {size.Width}x{size.Height}");
             watchTimer = new System.Threading.Timer(_ => CheckFrames(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
             minuteTimer = new System.Threading.Timer(_ => { if (!disposed) SubtitleLog.Write(counts.MinuteLine()); },
@@ -629,6 +631,7 @@ public sealed class RemotePlayWindowStream : IStreamSession
         {
             if (disposed) return;
             disposed = true;
+            CaptureTarget.Clear(window);
             try { watchTimer.Dispose(); } catch (Exception) { }
             try { minuteTimer.Dispose(); } catch (Exception) { }
             lock (this)

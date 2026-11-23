@@ -445,6 +445,12 @@ public sealed record UserSettings
     public string AiInstruction { get; init; } = "";
     /// <summary>Altyazı TV'de mi, bilgisayar ekranındaki pencerede mi, ikisinde de mi. Eski kayıtlar TV ile açılır.</summary>
     public SubtitleOutput Output { get; init; } = SubtitleOutput.Tv;
+    /// <summary>
+    /// Faz3a fork: on the PC, each translation is drawn over the text it translates (the subtitle over the game's subtitle,
+    /// phone text over the phone, on-screen text over its box) on a click-through layer over the window being read.
+    /// Off: everything in the subtitle bar as upstream.
+    /// </summary>
+    public bool TranslationOverText { get; init; } = true;
     /// <summary>Bilgisayar ekranındaki altyazı penceresi tıklamaları alttaki pencereye (oyun, PS Remote Play) geçirir.</summary>
     public bool OverlayClickThrough { get; init; }
     /// <summary>Altyazı penceresinin son yeri; null ise ana ekranın altında ortada açılır.</summary>

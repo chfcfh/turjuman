@@ -41,6 +41,10 @@
                     </StackPanel>
                 </c:Unit>
                 <StackPanel>
+                    <!-- Faz3a fork: translations over their own text. -->
+                    <c:SwitchRow x:Name="OverText" Content="{t:T 'Translation over the original text'}"
+                                 Description="{t:T 'Each translation appears right on top of the English it translates: over the subtitle, over the phone, over a message. When its place is not known it appears in the bar.'}"
+                                 Checked="OnOverText" Unchecked="OnOverText" />
                     <c:SwitchRow x:Name="ClickThrough" Content="{t:T 'Clicks pass through'}" Checked="OnClickThrough" Unchecked="OnClickThrough" />
                     <TextBlock x:Name="ClickThroughHint" Style="{StaticResource HintText}" Margin="{t:Sp 'xxl,unitHint,0,0'}" />
                 </StackPanel>

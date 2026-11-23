@@ -56,6 +56,14 @@ public sealed partial class SubtitleOverlayWindow : Window
     /// <summary>Başka bir tam ekran ya da üstte duran pencere öne gelince altyazıyı yeniden en üste koyar.</summary>
     private readonly TopmostKeeper topmost;
     private IntPtr handle;
+    /// <summary>Faz3a fork: translations over their own text, on a layer over the window being read.</summary>
+    private InPlaceTextWindow? inPlace;
+
+    /// <summary>
+    /// Faz3a fork: "Translation over the original text" is on and a window is being read. Otherwise everything stays in
+    /// this bar as upstream (demo mode, nothing captured yet, the captured window minimized).
+    /// </summary>
+    private bool InPlace => controller.Settings.TranslationOverText && controller.ShowsOnComputer && InPlaceTextWindow.Available;
     /// <summary>Pencere bir kez açılamadı ya da çizilemedi: bu oturumda bir daha denenmez, çeviri pencere olmadan sürer.</summary>
     private bool broken;
 
@@ -135,6 +143,7 @@ public sealed partial class SubtitleOverlayWindow : Window
         controller.PropertyChanged -= OnChanged;
         timer.Stop();
         topmost.Dispose();
+        try { inPlace?.Close(); } catch (InvalidOperationException) { }
         try { Close(); }
         catch (InvalidOperationException error) { StartupGuard.Log("Altyazı penceresi kapatılamadı", error); }
     }
@@ -195,7 +204,8 @@ public sealed partial class SubtitleOverlayWindow : Window
                 // Kendiliğinden bulunan ekran yazıları (auto-…) bu pencerede gösterilmez: saydam pencere kullanıcının
                 // seçtiği altyazı yeridir; oyunun her yerindeki yazılar burada altyazının üstüne yığılıp altyazı
                 // "istenmeyen yerden çıkıyor" gibi görünüyordu (beta.63). Onlar TV'de ve yayın penceresinde kendi yerinde.
-                if (ScreenTextAreas.IsAuto(e.Id)) break;
+                // Faz3a fork: over their own text (InPlace) they are where they belong, so they are kept.
+                if (ScreenTextAreas.IsAuto(e.Id) && !InPlace) break;
                 regions.Remove(e.Id);
                 if (e.Text.Length > 0) regions[e.Id] = (e.Text, e.Box, e.Blocks);
                 break;
@@ -267,6 +277,39 @@ public sealed partial class SubtitleOverlayWindow : Window
             lines.Add(new SubtitleStack.Line(0, Localizer.Current["Subtitles appear here."], SubtitleStack.Role.Current, false, false));
         adjustLayer.Visibility = adjusting ? Visibility.Visible : Visibility.Collapsed;
 
+        // Faz3a fork: over the original text. The current line covers the game's subtitle when its place is known (then
+        // the bar shows no lines); phone messages, extra areas and on-screen text sit on their own text. Anything whose
+        // place is unknown stays in the bar.
+        // Automatic on-screen text kept for the layer never goes into the bar (as upstream), e.g. after the switch is
+        // turned off mid-session.
+        var barRegions = regions.Keys.Any(ScreenTextAreas.IsAuto)
+            ? regions.Where(pair => !ScreenTextAreas.IsAuto(pair.Key)).ToDictionary()
+            : regions;
+        if (InPlace && !adjusting)
+        {
+            inPlace ??= new InPlaceTextWindow();
+            var current = lines.LastOrDefault(l => l.Role == SubtitleStack.Role.Current && !l.Paragraphs);
+            if (current is not null && subtitleBox is { Box: { } where } known && known.Text == current.Text)
+            {
+                var style = controller.Settings.Style;
+                inPlace.ShowLine(current.Text, where, style, words => SpeakerText.Fill(words, current.Text, current.Text,
+                    controller.Settings.SpeakerColors, controller.SpeakerBook, nameOnly: style.NameOnly));
+                lines.Clear();
+            }
+            else inPlace.ShowLine(null, null, controller.Settings.Style);
+            var placed = new List<ScreenTranslation.Item>();
+            barRegions = [];
+            foreach (var (id, region) in ScreenRegions.Visible(regions))
+            {
+                if (region.Blocks is { Count: > 0 } blocks) placed.AddRange(blocks);
+                else if (region.Box is { } at && region.Text.Length > 0)
+                    placed.Add(new ScreenTranslation.Item("", region.Text, at, Math.Clamp((at.Bottom - at.Top) / 3, 0.015, 0.035)));
+                else barRegions[id] = region;
+            }
+            inPlace.ShowItems(placed);
+        }
+        else inPlace?.HideAll();
+
         linesPanel.Children.Clear();
         foreach (var id in boxes.Keys.Except(lines.Select(l => l.Id)).ToList()) boxes.Remove(id);
         foreach (var line in lines)
@@ -286,9 +329,9 @@ public sealed partial class SubtitleOverlayWindow : Window
 
         // Sohbet paneli saydam pencerede alanın telefon tarafındaki kenarında, yazısı altyazı boyundan (Mac ile aynı).
         regionsPanel.PanelFont = Math.Max(13, OverlayPlacement.FontSize(controller.Settings.Style.FontSize) * Scale * 0.55);
-        regionsPanel.ShowRegions(regions, MakeRegionBox);
+        regionsPanel.ShowRegions(barRegions, MakeRegionBox);
 
-        var visible = controller.ShowsOnComputer && (lines.Count > 0 || regions.Count > 0);
+        var visible = controller.ShowsOnComputer && (lines.Count > 0 || barRegions.Count > 0);
         if (visible && !IsVisible) Show();
         else if (!visible && IsVisible) Hide();
         // Arada öne gelen tam ekran/üstte duran pencere altyazıyı örtmüş olabilir; odak alınmadan yeniden üste konur.
