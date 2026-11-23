@@ -490,6 +490,22 @@ public sealed class AiTranslator : ITextTranslator, IOnlineTranslator
     internal static readonly TimeSpan LocalRetryAfter = TimeSpan.FromSeconds(5);
     /// <summary>Hata sonrası hizmetin denenmediği süre: yerel modelde <see cref="LocalRetryAfter"/>, bulutta bir dakika (testler kısaltır).</summary>
     internal TimeSpan ErrorPause { get; init; }
+
+    /// <summary>
+    /// Faz3a fork: after a timeout or a busy answer (<see cref="OnlineKeyState.Busy"/>) the service is tried again
+    /// sooner than after a real error: one slow answer from a free Gemini key paused it for a whole minute.
+    /// </summary>
+    internal static readonly TimeSpan BusyRetryAfter = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Faz3a fork: how long a subtitle waits for the service before the free translation is shown instead. The answer
+    /// still arrives in the background and is kept, so the line uses it next time. Null: wait for the answer (old way).
+    /// On a Discord stream a free Gemini key answered in 1–2.6 s, sometimes after more than 5 s; a line lasts 3–4 s.
+    /// </summary>
+    internal TimeSpan? SoftDeadline { get; init; }
+
+    private TimeSpan PauseFor(OnlineKeyState state) =>
+        state == OnlineKeyState.Busy && BusyRetryAfter < ErrorPause ? BusyRetryAfter : ErrorPause;
     /// <summary>Dakikalık sınır aşılınca en çok bu kadar beklenir (hizmet bekleme önermezse de bu kadar).</summary>
     public static readonly TimeSpan RateLimitPause = TimeSpan.FromSeconds(20);
     /// <summary>Denemede çevrilen örnek satır.</summary>
@@ -569,6 +585,7 @@ public sealed class AiTranslator : ITextTranslator, IOnlineTranslator
         _instructionTag = AiRequest.InstructionTag(_instruction);
         Provider = provider;
         ErrorPause = provider.IsLocal() ? LocalRetryAfter : RetryAfter;
+        SoftDeadline = http is null ? provider.IsLocal() ? TimeSpan.FromSeconds(4) : TimeSpan.FromSeconds(2) : null;
         Model = provider.Model(model);
         Server = provider.IsLocal() ? server ?? LocalAiServer.Create(LocalAiServer.OllamaUrl, Model.Id) : null;
         _key = key.Trim();
@@ -657,7 +674,23 @@ public sealed class AiTranslator : ITextTranslator, IOnlineTranslator
         try
         {
             var present = SpeakerNameGuard.Occurring(_speakers.Protected, string.Join("\n", sources), exact: true);
-            translated = sources.Count == 0 ? [] : await RequestAsync(sources, context, game, present, cancellationToken).ConfigureAwait(false);
+            if (sources.Count == 0) translated = [];
+            else
+            {
+                var request = RequestAsync(sources, context, game, present, cancellationToken);
+                // Faz3a fork: the service is slow. The free translation is shown now instead of after the answer (or never,
+                // once the line has left the screen); the service's answer is still awaited and kept for next time.
+                if (SoftDeadline is { } soft && _fallback is not null
+                    && await Task.WhenAny(request, Task.Delay(soft, cancellationToken)).ConfigureAwait(false) != request
+                    && !cancellationToken.IsCancellationRequested
+                    && await TryFallbackAsync(text, cancellationToken).ConfigureAwait(false) is { } quick)
+                {
+                    _ = KeepLateAnswerAsync(request, [.. missing.Select(i => pieces[i].Text)], game);
+                    NoteFallback($"yavaş yanıt ({soft.TotalSeconds:0.#} sn)");
+                    return Remember(quick, text, game);
+                }
+                translated = await request.ConfigureAwait(false);
+            }
             if (sources.Count > 0) Report(null);
         }
         catch (AiRateLimitedException limited) when (!cancellationToken.IsCancellationRequested)
@@ -677,7 +710,7 @@ public sealed class AiTranslator : ITextTranslator, IOnlineTranslator
         {
             var state = StateOf(error);
             Report(state);
-            _pausedUntil = DateTimeOffset.UtcNow + ErrorPause;
+            _pausedUntil = DateTimeOffset.UtcNow + PauseFor(state);
             _pauseRateLimited = false;
             NoteFallback($"hizmet durumu: {state}");
             return Remember(await FallbackAsync(text, cancellationToken).ConfigureAwait(false), text, game);
@@ -721,6 +754,37 @@ public sealed class AiTranslator : ITextTranslator, IOnlineTranslator
     /// cümleyi sık sık olduğu gibi döndürüyor ("You think I'm on the run?"); hat bunu Türkçe sanıp hiç göstermiyor,
     /// önbellek de öyle saklıyordu (#245).
     /// </summary>
+    /// <summary>
+    /// Faz3a fork: the service's answer that came after the soft deadline. Good sentences go into the cache (the same line
+    /// then uses them); failures count like any failed request.
+    /// </summary>
+    private async Task KeepLateAnswerAsync(Task<string[]> request, IReadOnlyList<string> pieces, string? game)
+    {
+        try
+        {
+            var translated = await request.ConfigureAwait(false);
+            Report(null);
+            for (var i = 0; i < pieces.Count && i < translated.Length; i++)
+                if (!string.IsNullOrWhiteSpace(translated[i]) && !IsEcho(pieces[i], translated[i]))
+                    _cache.Store(CacheKey(pieces[i], game), translated[i]);
+        }
+        catch (AiRateLimitedException limited)
+        {
+            if (limited.Limit.RequestsPerMinute is { } perMinute) _budget?.Lower(perMinute);
+            var pause = limited.Limit.RetryAfter is { } retry && retry < RateLimitPause ? retry : RateLimitPause;
+            _pausedUntil = DateTimeOffset.UtcNow + (pause < TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : pause);
+            _pauseRateLimited = true;
+        }
+        catch (Exception error) when (error is HttpRequestException or TaskCanceledException or AiException)
+        {
+            var state = StateOf(error);
+            Report(state);
+            _pausedUntil = DateTimeOffset.UtcNow + PauseFor(state);
+            _pauseRateLimited = false;
+        }
+        catch (Exception error) when (error is OperationCanceledException) { }
+    }
+
     internal static bool IsEcho(string source, string translation) =>
         TextMatch.IsSimilar(TextMatch.Normalize(source), TextMatch.Normalize(translation), 0.90);
 

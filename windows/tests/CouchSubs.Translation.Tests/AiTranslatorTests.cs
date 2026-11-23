@@ -189,6 +189,39 @@ public class AiTranslatorTests
         Assert.Equal(4, fake.Requests.Count);
     }
 
+    /// <summary>
+    /// Faz3a fork: a slow service (seen with a free Gemini key on a live stream). After the soft deadline the free
+    /// translation is shown; the service's late answer is kept, so the same line then uses it; slowness is no error.
+    /// </summary>
+    [Fact]
+    public async Task SlowServiceShowsTheFreeTranslationAndKeepsTheLateAnswer()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new SlowAi(release.Task);
+        var local = new FakeLocal();
+        var translator = new AiTranslator(AiProvider.Gemini, Secret, null, local, new HttpClient(gate), new TranslationCache(),
+            new RequestBudget(1000)) { SoftDeadline = TimeSpan.FromMilliseconds(50) };
+        Assert.Equal("yerel: We go now.", await translator.TranslateAsync("We go now."));
+        release.SetResult();
+        for (var i = 0; i < 100 && translator.CachedTranslation("We go now.") is null; i++) await Task.Delay(20);
+        Assert.Equal("[tr] We go now.", await translator.TranslateAsync("We go now."));
+        Assert.Null(translator.LastError);
+        Assert.Single(gate.Bodies);
+    }
+
+    /// <summary>Answers like <see cref="FakeAi"/>, but only once <paramref name="released"/> completes.</summary>
+    private sealed class SlowAi(Task released) : HttpMessageHandler
+    {
+        public List<string> Bodies { get; } = [];
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            Bodies.Add(body);
+            await released.WaitAsync(cancellationToken);
+            return Echo(request, body);
+        }
+    }
+
     /// <summary>Yapay zekâ hizmetlerinin yerine geçen sahte sunucu: istekleri saklar, cümleleri "[tr] cümle" diye çevirir.</summary>
     private sealed class FakeAi(Func<HttpRequestMessage, string, HttpResponseMessage>? reply = null) : HttpMessageHandler
     {
